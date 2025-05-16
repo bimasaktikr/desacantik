@@ -1,14 +1,14 @@
 <?php
 
-namespace App\Filament\Resources\KecamatanResource\Pages;
+namespace App\Filament\Resources\RegencyResource\Pages;
 
-use App\Filament\Resources\KecamatanResource;
+use App\Filament\Resources\RegencyResource;
 use Filament\Actions;
 use Filament\Resources\Pages\EditRecord;
 
-class EditKecamatan extends EditRecord
+class EditRegency extends EditRecord
 {
-    protected static string $resource = KecamatanResource::class;
+    protected static string $resource = RegencyResource::class;
 
     protected function getHeaderActions(): array
     {

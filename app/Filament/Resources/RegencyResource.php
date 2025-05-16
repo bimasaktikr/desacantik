@@ -2,9 +2,9 @@
 
 namespace App\Filament\Resources;
 
-use App\Filament\Resources\KecamatanResource\Pages;
-use App\Filament\Resources\KecamatanResource\RelationManagers;
-use App\Models\Kecamatan;
+use App\Filament\Resources\RegencyResource\Pages;
+use App\Filament\Resources\RegencyResource\RelationManagers;
+use App\Models\Regency;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
@@ -13,15 +13,15 @@ use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 
-class KecamatanResource extends Resource
+class RegencyResource extends Resource
 {
-    protected static ?string $model = Kecamatan::class;
+    protected static ?string $model = Regency::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
 
     protected static ?string $navigationGroup = 'Administrasi Wilayah';
 
-    protected static ?string $navigationLabel = 'Kecamatan';
+    protected static ?string $navigationLabel = 'Kabupaten/Kota';
 
     public static function form(Form $form): Form
     {
@@ -62,9 +62,9 @@ class KecamatanResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index' => Pages\ListKecamatans::route('/'),
-            'create' => Pages\CreateKecamatan::route('/create'),
-            'edit' => Pages\EditKecamatan::route('/{record}/edit'),
+            'index' => Pages\ListRegencies::route('/'),
+            'create' => Pages\CreateRegency::route('/create'),
+            'edit' => Pages\EditRegency::route('/{record}/edit'),
         ];
     }
 }
