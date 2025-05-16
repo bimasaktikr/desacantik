@@ -2,9 +2,9 @@
 
 namespace App\Filament\Resources;
 
-use App\Filament\Resources\RegencyResource\Pages;
-use App\Filament\Resources\RegencyResource\RelationManagers;
-use App\Models\Regency;
+use App\Filament\Resources\VilageResource\Pages;
+use App\Filament\Resources\VilageResource\RelationManagers;
+use App\Models\Vilage;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
@@ -13,17 +13,16 @@ use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 
-class RegencyResource extends Resource
+class VilageResource extends Resource
 {
-    protected static ?string $model = Regency::class;
+    protected static ?string $model = Vilage::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
 
     protected static ?string $navigationGroup = 'Administrasi Wilayah';
 
-    protected static ?string $navigationLabel = 'Kabupaten/Kota';
-
-    protected static ?int $navigationSort = 1;
+    protected static ?string $navigationLabel = 'Desa/Kelurahan';
+    protected static ?int $navigationSort = 3;
 
     public static function form(Form $form): Form
     {
@@ -64,9 +63,9 @@ class RegencyResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index' => Pages\ListRegencies::route('/'),
-            'create' => Pages\CreateRegency::route('/create'),
-            'edit' => Pages\EditRegency::route('/{record}/edit'),
+            'index' => Pages\ListVilages::route('/'),
+            'create' => Pages\CreateVilage::route('/create'),
+            'edit' => Pages\EditVilage::route('/{record}/edit'),
         ];
     }
 }

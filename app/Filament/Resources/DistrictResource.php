@@ -22,6 +22,7 @@ class DistrictResource extends Resource
     protected static ?string $navigationGroup = 'Administrasi Wilayah';
 
     protected static ?string $navigationLabel = 'Kecamatan';
+    protected static ?int $navigationSort = 2;
 
     public static function form(Form $form): Form
     {
