@@ -15,10 +15,11 @@ return new class extends Migration
             $table->id();
             $table->string('name');
             $table->string('slug')->unique();
-            $table->foreignId('village_id')->constrained('vilages')->cascadeOnDelete();
-            $table->string('code');
-            $table->string('sls_code')->unique();
+            $table->foreignId('village_id')->constrained('villages')->onDelete('cascade');
+            $table->string('code')->unique();
+            $table->string('sls_code');
             $table->string('geojson_path')->unique();
+            $table->foreignId('base_map_id')->nullable()->constrained('base_maps')->nullOnDelete();
             $table->timestamps();
         });
     }

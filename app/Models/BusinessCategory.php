@@ -4,25 +4,17 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-class District extends Model
+class BusinessCategory extends Model
 {
     //
 
     // add fillable
     protected $fillable = [
-        'name',
-        'slug',
-        'regency_id',
         'code',
-        'district_code',
+        'description'
     ];
     // add guaded
     protected $guarded = ['id'];
     // add hidden
     protected $hidden = ['created_at', 'updated_at'];
-
-    public function regency()
-    {
-        return $this->belongsTo(Regency::class);
-    }
 }

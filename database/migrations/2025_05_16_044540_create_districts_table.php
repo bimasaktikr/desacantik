@@ -16,7 +16,7 @@ return new class extends Migration
             $table->string('name')->unique();
             $table->string('slug')->unique();
             $table->foreignId('regency_id')->constrained('regencies')->cascadeOnDelete()->cascadeOnUpdate();
-            $table->string('code');
+            $table->string('code')->unique();
             $table->string('district_code');
             $table->timestamps();
         });

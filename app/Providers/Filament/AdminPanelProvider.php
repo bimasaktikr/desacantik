@@ -103,9 +103,18 @@ class AdminPanelProvider extends PanelProvider
                     ->collapsed(),
                 NavigationGroup::make('')
                     ->label('Pendataan')
-                    ->icon('heroicon-o-academic-cap')
+                    ->icon('heroicon-o-pencil-square')
+                    ->collapsed(),
+                NavigationGroup::make('')
+                    ->label('Peta Digital')
+                    ->icon('heroicon-o-map')
+                    ->collapsed(),
+                NavigationGroup::make('')
+                    ->label('Master')
+                    ->icon('heroicon-o-window')
                     ->collapsed(),
                 ])
+
             ;
     }
 

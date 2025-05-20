@@ -4,7 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-class District extends Model
+class Village extends Model
 {
     //
 
@@ -12,17 +12,18 @@ class District extends Model
     protected $fillable = [
         'name',
         'slug',
-        'regency_id',
+        'district_id',
         'code',
-        'district_code',
+        'village_code',
+        'geojson_path',
     ];
     // add guaded
     protected $guarded = ['id'];
     // add hidden
     protected $hidden = ['created_at', 'updated_at'];
 
-    public function regency()
+    public function district()
     {
-        return $this->belongsTo(Regency::class);
+        return $this->belongsTo(District::class);
     }
 }

@@ -3,6 +3,10 @@
 namespace App\Providers;
 
 use App\Models\User;
+use Filament\Facades\Filament;
+use Filament\Support\Assets\Css;
+use Filament\Support\Assets\Js;
+use Filament\Support\Facades\FilamentAsset;
 use Filament\Support\Facades\FilamentView;
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\Facades\Event;
@@ -34,5 +38,13 @@ class AppServiceProvider extends ServiceProvider
         Event::listen(function (\SocialiteProviders\Manager\SocialiteWasCalled $event) {
             $event->extendSocialite('discord', \SocialiteProviders\Google\Provider::class);
         });
+
+        FilamentAsset::register([
+            Css::make('leaflet-css' , 'https://unpkg.com/leaflet@1.9.3/dist/leaflet.css'),
+            Js::make('leaflet-js' , 'https://unpkg.com/leaflet@1.9.3/dist/leaflet.js'),
+        ]);
+
+
+
     }
 }

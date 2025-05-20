@@ -4,25 +4,22 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-class District extends Model
+class Basemap extends Model
 {
-    //
+    protected $table = 'base_maps';
+
 
     // add fillable
     protected $fillable = [
-        'name',
-        'slug',
-        'regency_id',
-        'code',
-        'district_code',
+        'name', 'file_path', 'period', 'regency_name', 'source', 'user_id',
     ];
     // add guaded
     protected $guarded = ['id'];
     // add hidden
     protected $hidden = ['created_at', 'updated_at'];
 
-    public function regency()
+    public function user()
     {
-        return $this->belongsTo(Regency::class);
+        return $this->belongsTo(User::class);
     }
 }

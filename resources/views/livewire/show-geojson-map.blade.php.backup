@@ -1,0 +1,48 @@
+<div>
+    @if ($showModal)
+    <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+        <div class="bg-white w-[90vw] h-[80vh] relative rounded-lg overflow-hidden shadow">
+            <button wire:click="$set('showModal', false)" class="absolute z-10 text-xl text-gray-700 top-2 right-2">✖</button>
+            {{-- <div id="map" class="w-full h-full"></div> --}}
+            <div id="map" style="width: 100%; height: 400px;"></div>
+
+        </div>
+    </div>
+
+    <script>
+        if (!window.hasInitializedMapListener) {
+            window.addEventListener('openMapModal', event => {
+                setTimeout(() => {
+                    const mapContainer = document.getElementById('map');
+                    if (!mapContainer) return;
+
+                    // Hapus peta lama (jika ada)
+                    if (window.map) {
+                        window.map.remove();
+                    }
+
+                    window.map = L.map('map').setView([-7.98, 112.63], 14);
+
+                    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                        attribution: '&copy; OpenStreetMap contributors'
+                    }).addTo(window.map);
+
+                    fetch(event.detail.url)
+                        .then(res => res.json())
+                        .then(data => {
+                            const layer = L.geoJSON(data).addTo(window.map);
+                            window.map.fitBounds(layer.getBounds());
+                            console.log(data);
+                        })
+                        .catch(err => {
+                            console.error('GeoJSON error:', err);
+                            alert('Gagal memuat GeoJSON.');
+                        });
+                }, 300);
+            });
+
+            window.hasInitializedMapListener = true;
+        }
+    </script>
+    @endif
+</div>

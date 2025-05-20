@@ -1,0 +1,30 @@
+<?php
+
+namespace App\Livewire;
+
+use Illuminate\Support\Facades\Log;
+use Livewire\Component;
+
+class ShowGeojsonMap extends Component
+{
+    public $showModal = false;
+    public $geojsonUrl;
+
+    protected $listeners = ['openMapModal' => 'open'];
+
+    public function open($url)
+    {
+        Log::info('ShowGeoJSON trigered:' . $url);
+        $this->geojsonUrl = $url;
+        $this->showModal = true;
+        // dd($url);
+        // $this->dispatchBrowserEvent('openMapModal', ['url' => $url]);
+        $this->dispatch('openMapModal', url: $url);
+
+    }
+
+    public function render()
+    {
+        return view('livewire.show-geojson-map');
+    }
+}
