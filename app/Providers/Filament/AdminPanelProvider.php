@@ -113,6 +113,19 @@ class AdminPanelProvider extends PanelProvider
                     ->label('Master')
                     ->icon('heroicon-o-window')
                     ->collapsed(),
+                NavigationGroup::make('')
+                    ->label('Settings')
+                    ->icon('heroicon-o-adjustments-horizontal')
+                    ->collapsed(),
+                NavigationGroup::make('')
+                    ->label('User')
+                    ->icon('heroicon-o-user-group')
+                    ->collapsed(),
+                NavigationGroup::make('')
+                    ->label('Filament Shield')
+                    ->icon('heroicon-o-shield-check')
+                    ->collapsed(),
+
                 ])
 
             ;

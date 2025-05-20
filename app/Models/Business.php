@@ -13,10 +13,18 @@ class Business extends Model
         'name',
         'description',
         'address',
+        'sls_id',
+        'latitude',
+        'longitude',
+        'status_bangunan',
+        'business_category_id',
         'phone',
         'email',
-        'website',
-        'online_status_id',
+        'owner_name',
+        'owner_gender',
+        'owner_age',
+        'online_status',
+        'pembinaan',
     ];
     // add guaded
     protected $guarded = ['id'];
@@ -28,5 +36,15 @@ class Business extends Model
         return $this->belongsToMany(Certification::class)
                 ->withPivot('issue_date')
                 ->withTimestamps();
+    }
+
+    public function businessCategory()
+    {
+        return $this->belongsTo(BusinessCategory::class);
+    }
+
+    public function sls()
+    {
+        return $this->belongsTo(Sls::class);
     }
 }

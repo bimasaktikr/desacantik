@@ -127,4 +127,9 @@ class BookResource extends Resource implements HasShieldPermissions
                 ]),
             ]);
     }
+
+    public static function shouldRegisterNavigation(): bool
+    {
+        return false;
+    }
 }

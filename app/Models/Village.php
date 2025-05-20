@@ -26,4 +26,9 @@ class Village extends Model
     {
         return $this->belongsTo(District::class);
     }
+
+    public function assignments()
+    {
+        return $this->morphMany(Assignment::class, 'assignable');
+    }
 }
