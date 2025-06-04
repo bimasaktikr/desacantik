@@ -10,6 +10,7 @@ class Business extends Model
 
     // add fillable
     protected $fillable = [
+        'point_id',
         'name',
         'description',
         'address',
@@ -26,6 +27,7 @@ class Business extends Model
         'owner_age',
         'online_status',
         'pembinaan',
+        'pertokoan',
         'catatan_lantaibloksektor',
         'user_id',
     ];
