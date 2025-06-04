@@ -31,6 +31,7 @@ class User extends Authenticatable implements FilamentUser, HasAvatar, MustVerif
         'email',
         'password',
         'avatar_url',
+        'password',
     ];
 
     /**
@@ -39,7 +40,6 @@ class User extends Authenticatable implements FilamentUser, HasAvatar, MustVerif
      * @var array<int, string>
      */
     protected $hidden = [
-        'password',
         'remember_token',
     ];
 

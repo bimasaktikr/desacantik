@@ -11,10 +11,11 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('assigments', function (Blueprint $table) {
+        Schema::create('assignment_uploads', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('assignment_id')->constrained()->onDelete('cascade');
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
-            $table->morphs('area'); // This will support polymorphic: village or sls
+            $table->string('file_path');
             $table->timestamps();
         });
     }
@@ -24,6 +25,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('assigments');
+        Schema::dropIfExists('assignment_uploads');
     }
 };

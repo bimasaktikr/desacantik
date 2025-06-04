@@ -24,7 +24,7 @@ class CertificationResource extends Resource
     protected static ?string $navigationLabel = 'Data Sertifikasi';
     protected static ?string $title = 'Data Sertifikasi';
     protected static ?string $slug = 'certifications';
-    protected static ?int $navigationSort = 2;
+    protected static ?int $navigationSort = 4;
 
 
     public static function form(Form $form): Form

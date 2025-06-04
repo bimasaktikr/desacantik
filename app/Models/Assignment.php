@@ -3,15 +3,17 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\MorphTo;
 
-class Assigment extends Model
+class Assignment extends Model
 {
     //
 
     // add fillable
     protected $fillable = [
         'user_id',
-        'area'
+        'area_type',
+        'area_id'
     ];
     // add guaded
     protected $guarded = ['id'];
@@ -23,8 +25,13 @@ class Assigment extends Model
         return $this->belongsTo(User::class);
     }
 
-    public function assignable()
+    public function area(): MorphTo
     {
         return $this->morphTo();
+    }
+
+    public function assignmentUploads()
+    {
+        return $this->hasMany(AssignmentUpload::class);
     }
 }

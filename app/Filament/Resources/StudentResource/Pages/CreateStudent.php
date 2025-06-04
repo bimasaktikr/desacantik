@@ -1,14 +1,14 @@
 <?php
 
-namespace App\Filament\Resources\AssigmentResource\Pages;
+namespace App\Filament\Resources\StudentResource\Pages;
 
-use App\Filament\Resources\AssigmentResource;
+use App\Filament\Resources\StudentResource;
 use Filament\Actions;
 use Filament\Resources\Pages\CreateRecord;
 
-class CreateAssigment extends CreateRecord
+class CreateStudent extends CreateRecord
 {
-    protected static string $resource = AssigmentResource::class;
+    protected static string $resource = StudentResource::class;
     protected static bool $canCreateAnother = false;
 
     //customize redirect after create

@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
 
 class Sls extends Model
 {
@@ -30,5 +31,10 @@ class Sls extends Model
     public function baseMap()
     {
         return $this->belongsTo(BaseMap::class);
+    }
+
+    public function assignments(): MorphMany
+    {
+        return $this->morphMany(\App\Models\Assignment::class, 'area');
     }
 }

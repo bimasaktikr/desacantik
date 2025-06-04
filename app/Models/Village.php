@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
 
 class Village extends Model
 {
@@ -27,8 +28,8 @@ class Village extends Model
         return $this->belongsTo(District::class);
     }
 
-    public function assignments()
+    public function assignments(): MorphMany
     {
-        return $this->morphMany(Assignment::class, 'assignable');
+        return $this->morphMany(\App\Models\Assignment::class, 'area');
     }
 }

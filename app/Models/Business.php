@@ -13,6 +13,7 @@ class Business extends Model
         'name',
         'description',
         'address',
+        'village_id',
         'sls_id',
         'latitude',
         'longitude',
@@ -25,6 +26,8 @@ class Business extends Model
         'owner_age',
         'online_status',
         'pembinaan',
+        'catatan_lantaibloksektor',
+        'user_id',
     ];
     // add guaded
     protected $guarded = ['id'];
@@ -46,5 +49,15 @@ class Business extends Model
     public function sls()
     {
         return $this->belongsTo(Sls::class);
+    }
+
+    public function village()
+    {
+        return $this->belongsTo(Village::class);
+    }
+
+    public function user()
+    {
+        return $this->belongsTo(User::class);
     }
 }

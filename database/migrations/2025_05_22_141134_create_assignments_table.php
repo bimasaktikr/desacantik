@@ -11,8 +11,11 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('villages', function (Blueprint $table) {
-            $table->string('geojson_path')->nullable()->after('village_code');
+        Schema::create('assignments', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('user_id')->constrained()->onDelete('cascade');
+            $table->morphs('area'); // This will support polymorphic: village or sls
+            $table->timestamps();
         });
     }
 
@@ -21,8 +24,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('villages', function (Blueprint $table) {
-            $table->dropColumn('geojson_path');
-        });
+        Schema::dropIfExists('assignments');
     }
 };

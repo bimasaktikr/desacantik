@@ -11,11 +11,12 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('business_certificate', function (Blueprint $table) {
+        Schema::create('business_certification', function (Blueprint $table) {
             $table->foreignId('business_id')->constrained()->cascadeOnDelete();
             $table->foreignId('certification_id')->constrained()->cascadeOnDelete();
             $table->date('issue_date')->nullable();
             $table->primary(['business_id', 'certification_id']);
+            $table->timestamps();
         });
     }
 

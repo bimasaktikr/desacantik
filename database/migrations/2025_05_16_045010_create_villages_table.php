@@ -18,6 +18,7 @@ return new class extends Migration
             $table->foreignId('district_id')->constrained('districts')->cascadeOnDelete();
             $table->string('code')->unique();
             $table->string('village_code');
+            $table->string('geojson_path')->nullable();
             $table->timestamps();
         });
     }

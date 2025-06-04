@@ -2,9 +2,9 @@
 
 namespace App\Filament\Resources;
 
-use App\Filament\Resources\AssigmentResource\Pages;
-use App\Filament\Resources\AssigmentResource\RelationManagers;
-use App\Models\Assigment;
+use App\Filament\Resources\AssignmentUploadResource\Pages;
+use App\Filament\Resources\AssignmentUploadResource\RelationManagers;
+use App\Models\AssignmentUpload;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
@@ -13,18 +13,11 @@ use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 
-class AssigmentResource extends Resource
+class AssignmentUploadResource extends Resource
 {
-    protected static ?string $model = Assigment::class;
+    protected static ?string $model = AssignmentUpload::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
-
-    protected static ?string $navigationGroup = 'Pendataan';
-    protected static ?string $navigationLabel = 'Assigment';
-    protected static ?string $title = 'Penugasan';
-    protected static ?string $slug = 'assigments';
-    protected static ?int $navigationSort = 2;
-
 
     public static function form(Form $form): Form
     {
@@ -65,9 +58,9 @@ class AssigmentResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index' => Pages\ListAssigments::route('/'),
-            'create' => Pages\CreateAssigment::route('/create'),
-            'edit' => Pages\EditAssigment::route('/{record}/edit'),
+            'index' => Pages\ListAssignmentUploads::route('/'),
+            'create' => Pages\CreateAssignmentUpload::route('/create'),
+            'edit' => Pages\EditAssignmentUpload::route('/{record}/edit'),
         ];
     }
 }

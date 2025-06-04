@@ -39,6 +39,8 @@ class BusinessResource extends Resource
 
     protected static ?string $slug = 'data-usaha';
 
+    protected static ?int $navigationSort = 3;
+
 
     public static function form(Form $form): Form
     {
@@ -203,11 +205,35 @@ class BusinessResource extends Resource
                     ->label('Kategori Usaha')
                     ->getStateUsing(fn ($record) => optional($record->businessCategory)?->code . '. ' . optional($record->businessCategory)?->description)
                     ->searchable()
+                    ->searchable()
+                    ->sortable(),
+                TextColumn::make('village.name')
+                    ->label('Desa/Kelurahan')
+                    ->searchable()
                     ->sortable(),
                 TextColumn::make('sls.name')
                     ->label('SLS')
                     ->searchable()
                     ->sortable(),
+                TextColumn::make('status_bangunan')
+                    ->label('Status Bangunan')
+                    ->searchable()
+                    ->sortable(),
+                TextColumn::make('online_status')
+                    ->label('Status Online')
+                    ->searchable()
+                    ->sortable(),
+                TextColumn::make('pembinaan')
+                    ->label('Pembinaan')
+                    ->searchable()
+                    ->sortable(),
+                TextColumn::make('user.name')
+                    ->label('Dibuat Oleh')
+                    ->searchable()
+                    ->sortable(),
+                TextColumn::make('created_at')
+                    ->label('Dibuat')
+                    ->dateTime('d/m/Y H:i')
             ])
             ->filters([
                 //

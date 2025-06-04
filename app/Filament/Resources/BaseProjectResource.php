@@ -34,6 +34,8 @@ class BaseProjectResource extends Resource
 
     protected static ?string $slug = 'base-projects';
 
+    protected static ?int $navigationSort = 2;
+
 
 
     public static function form(Form $form): Form

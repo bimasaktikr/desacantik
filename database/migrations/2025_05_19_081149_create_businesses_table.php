@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->string('name');
             $table->string('address');
-            $table->foreignId('sls_id')->constrained()->nullable();
+            $table->foreignId('sls_id')->constrained();
             $table->decimal('latitude', 10, 8)->nullable();
             $table->decimal('longitude', 11, 8)->nullable();
             $table->enum('status_bangunan',['Tetap', 'Tidak Tetap']);
@@ -28,6 +28,8 @@ return new class extends Migration
             $table->integer('owner_age')->nullable();
             $table->enum('online_status',['Ya', 'Tidak'])->nullable();
             $table->enum('pembinaan', ['Ya', 'Tidak'])->default('Tidak')->comment('Apakah bisnis ini ingin dibina?')->nullable();
+            $table->string('catatan')->nullable()->comment('Catatan lantai, blok, dan sektor');
+            $table->foreignId('user_id')->nullable()->constrained()->onDelete('cascade');
             $table->timestamps();
         });
     }
