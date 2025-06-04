@@ -12,9 +12,11 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('businesses', function (Blueprint $table) {
-            $table->string('point_id')->nullable()->after('id')->unique();
+            $table->string('point_id')->nullable()->after('id');
             $table->enum('pertokoan', ['ya', 'tidak'])->nullable()->after('pembinaan');
         });
+
+
     }
 
     /**

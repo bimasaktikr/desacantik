@@ -13,6 +13,7 @@ use App\Models\User;
 use Filament\Forms;
 use Filament\Forms\Components\Fieldset;
 use Filament\Forms\Components\Grid;
+use Filament\Forms\Components\Section;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
@@ -22,9 +23,11 @@ use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Enums\FiltersLayout;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
+use Illuminate\Support\Facades\Log;
 
 class BusinessResource extends Resource
 {
@@ -195,19 +198,9 @@ class BusinessResource extends Resource
                     ->searchable()
                     ->sortable(),
                 TextColumn::make('address')
-                    ->label('Alamat Usaha')
+                    ->label('Alamat')
                     ->searchable()
-                    ->sortable(),
-                TextColumn::make('description')
-                    ->label('Deskripsi Usaha')
-                    ->searchable()
-                    ->sortable(),
-                TextColumn::make('businessCategory.code')
-                    ->label('Kategori Usaha')
-                    ->getStateUsing(fn ($record) => optional($record->businessCategory)?->code . '. ' . optional($record->businessCategory)?->description)
-                    ->searchable()
-                    ->searchable()
-                    ->sortable(),
+                    ->limit(30),
                 TextColumn::make('village.name')
                     ->label('Desa/Kelurahan')
                     ->searchable()
@@ -216,33 +209,143 @@ class BusinessResource extends Resource
                     ->label('SLS')
                     ->searchable()
                     ->sortable(),
+                TextColumn::make('businessCategory.description')
+                    ->label('Kategori Usaha')
+                    ->searchable()
+                    ->sortable(),
                 TextColumn::make('status_bangunan')
                     ->label('Status Bangunan')
-                    ->searchable()
-                    ->sortable(),
+                    ->badge()
+                    ->color(fn (string $state): string => match ($state) {
+                        'Tetap' => 'success',
+                        'Tidak Tetap' => 'warning',
+                    }),
                 TextColumn::make('online_status')
                     ->label('Status Online')
-                    ->searchable()
-                    ->sortable(),
+                    ->badge()
+                    ->color(fn (string $state): string => match ($state) {
+                        'Ya' => 'success',
+                        'Tidak' => 'danger',
+                    }),
                 TextColumn::make('pembinaan')
                     ->label('Pembinaan')
-                    ->searchable()
-                    ->sortable(),
+                    ->badge()
+                    ->color(fn (string $state): string => match ($state) {
+                        'Ya' => 'success',
+                        'Tidak' => 'danger',
+                    }),
+                TextColumn::make('pertokoan')
+                    ->label('Pertokoan')
+                    ->badge()
+                    ->color(fn (string $state): string => match ($state) {
+                        'ya' => 'success',
+                        'tidak' => 'danger',
+                    }),
                 TextColumn::make('user.name')
-                    ->label('Dibuat Oleh')
+                    ->label('Petugas')
                     ->searchable()
                     ->sortable(),
                 TextColumn::make('created_at')
-                    ->label('Dibuat')
-                    ->dateTime('d/m/Y H:i')
+                    ->label('Tanggal Input')
+                    ->dateTime('d M Y H:i')
+                    ->sortable(),
             ])
             ->filters([
-                //
-            ])
+                Tables\Filters\Filter::make('location')
+                    ->form([
+                        Select::make('district_id')
+                            ->label('Kecamatan')
+                            ->options(\App\Models\District::pluck('name', 'id'))
+                            ->reactive()
+                            ->afterStateUpdated(fn (callable $set) => $set('village_id', null)),
+                        Select::make('village_id')
+                            ->label('Desa/Kelurahan')
+                            ->options(function (callable $get) {
+                                $districtId = $get('district_id');
+                                return $districtId
+                                    ? \App\Models\Village::where('district_id', $districtId)->pluck('name', 'id')
+                                    : [];
+                            })
+                            ->reactive()
+                            ->afterStateUpdated(fn (callable $set) => $set('sls_id', null)),
+                        Select::make('sls_id')
+                            ->label('SLS')
+                            ->options(function (callable $get) {
+                                $villageId = $get('village_id');
+                                return $villageId
+                                    ? \App\Models\Sls::where('village_id', $villageId)->pluck('name', 'id')
+                                    : [];
+                            }),
+                    ])
+                    ->query(function (Builder $query, array $data) {
+                        if (!empty($data['district_id'])) {
+                            $query->whereHas('village.district', fn ($q) => $q->where('id', $data['district_id']));
+                        }
+                        if (!empty($data['village_id'])) {
+                            $query->where('village_id', $data['village_id']);
+                        }
+                        if (!empty($data['sls_id'])) {
+                            $query->where('sls_id', $data['sls_id']);
+                        }
+                    }),
+                Tables\Filters\SelectFilter::make('business_category_id')
+                    ->label('Kategori Usaha')
+                    ->relationship('businessCategory', 'description')
+                    ->multiple()
+                    ->preload()
+                    ->searchable(),
+                Tables\Filters\SelectFilter::make('status_bangunan')
+                    ->label('Status Bangunan')
+                    ->options([
+                        'Tetap' => 'Tetap',
+                        'Tidak Tetap' => 'Tidak Tetap',
+                    ]),
+                Tables\Filters\SelectFilter::make('online_status')
+                    ->label('Status Online')
+                    ->options([
+                        'Ya' => 'Ya',
+                        'Tidak' => 'Tidak',
+                    ]),
+                Tables\Filters\SelectFilter::make('pembinaan')
+                    ->label('Pembinaan')
+                    ->options([
+                        'Ya' => 'Ya',
+                        'Tidak' => 'Tidak',
+                    ]),
+                Tables\Filters\SelectFilter::make('pertokoan')
+                    ->label('Pertokoan')
+                    ->options([
+                        'ya' => 'Ya',
+                        'tidak' => 'Tidak',
+                    ]),
+                Tables\Filters\SelectFilter::make('user_id')
+                    ->label('Petugas')
+                    ->relationship('user', 'name')
+                    ->multiple()
+                    ->preload()
+                    ->searchable(),
+                Tables\Filters\Filter::make('created_at')
+                    ->form([
+                        Forms\Components\DatePicker::make('created_from')
+                            ->label('Dari Tanggal'),
+                        Forms\Components\DatePicker::make('created_until')
+                            ->label('Sampai Tanggal'),
+                    ])
+                    ->query(function (Builder $query, array $data): Builder {
+                        return $query
+                            ->when(
+                                $data['created_from'],
+                                fn (Builder $query, $date): Builder => $query->whereDate('created_at', '>=', $date),
+                            )
+                            ->when(
+                                $data['created_until'],
+                                fn (Builder $query, $date): Builder => $query->whereDate('created_at', '<=', $date),
+                            );
+                    }),
+            ], layout: FiltersLayout::AboveContentCollapsible)
             ->actions([
                 Tables\Actions\EditAction::make(),
                 Tables\Actions\DeleteAction::make(),
-
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([

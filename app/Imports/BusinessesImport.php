@@ -326,15 +326,20 @@ class BusinessesImport implements ToCollection, WithHeadingRow, WithStartRow, Wi
                 // Try to find existing business by point_id first
                 $business = null;
                 if (!empty($row['point_id'])) {
-                    $business = Business::where('point_id', $row['point_id'])->first();
+                    $business = Business::where('point_id', $row['point_id'])
+                                     ->where('user_id', $this->upload?->user_id)
+                                     ->where('village_id', $this->village_id)
+                                     ->first();
                 }
 
                 // If not found by point_id, try fuzzy matching by name and address
                 if (!$business) {
-                    $business = Business::where(function($query) use ($row) {
-                        $query->where('name', 'like', '%' . $row['nama_usaha'] . '%')
-                              ->where('address', 'like', '%' . $row['alamat'] . '%');
-                    })->first();
+                    $business = Business::where('user_id', $this->upload?->user_id)
+                                     ->where('village_id', $this->village_id)
+                                     ->where(function($query) use ($row) {
+                                         $query->where('name', 'like', '%' . $row['nama_usaha'] . '%')
+                                               ->where('address', 'like', '%' . $row['alamat'] . '%');
+                                     })->first();
                 }
 
                 if ($business) {
