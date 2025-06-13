@@ -38,9 +38,8 @@ class AssignmentUser extends Page implements HasTable, HasForms
 
     protected static ?string $navigationGroup = 'Pendataan';
     protected static ?string $title = 'Assignment Petugas';
-    protected static ?string $navigationLabel = 'Assignment';
-    protected static ?string $slug = 'assignment-user';
-    protected static ?string $label = 'Assignment Petugas';
+    protected static ?string $navigationLabel = 'Unggah Data Usaha';
+    protected static ?string $slug = 'upload-assignment';
 
     public ?int $selectedAssignment = null;
     public $file = null;

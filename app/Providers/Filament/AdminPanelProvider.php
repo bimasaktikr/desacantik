@@ -97,36 +97,35 @@ class AdminPanelProvider extends PanelProvider
             )
             ->databaseNotifications()
             ->navigationGroups([
-                NavigationGroup::make('')
+                NavigationGroup::make('administrasi')
                     ->label('Administrasi Wilayah')
                     ->icon('heroicon-o-academic-cap')
                     ->collapsed(),
-                NavigationGroup::make('')
+                NavigationGroup::make('pendataan')
                     ->label('Pendataan')
                     ->icon('heroicon-o-pencil-square')
                     ->collapsed(),
-                NavigationGroup::make('')
+                NavigationGroup::make('peta')
                     ->label('Peta Digital')
                     ->icon('heroicon-o-map')
                     ->collapsed(),
-                NavigationGroup::make('')
+                NavigationGroup::make('master')
                     ->label('Master')
                     ->icon('heroicon-o-window')
                     ->collapsed(),
-                NavigationGroup::make('')
+                NavigationGroup::make('settings')
                     ->label('Settings')
                     ->icon('heroicon-o-adjustments-horizontal')
                     ->collapsed(),
-                NavigationGroup::make('')
+                NavigationGroup::make('user')
                     ->label('User')
                     ->icon('heroicon-o-user-group')
                     ->collapsed(),
-                NavigationGroup::make('')
+                NavigationGroup::make('shield')
                     ->label('Filament Shield')
                     ->icon('heroicon-o-shield-check')
                     ->collapsed(),
-
-                ])
+            ])
 
             ;
     }
