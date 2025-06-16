@@ -7,14 +7,13 @@ use App\Models\Assignment;
 use Filament\Widgets\LineChartWidget;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
 use Carbon\Carbon;
 use Livewire\Attributes\On;
 
-class BusinessChart extends LineChartWidget
+class BusinessCumulativeChart extends LineChartWidget
 {
-    protected static ?string $heading = 'Tren Harian Data Usaha';
-    protected static ?int $sort = 2;
+    protected static ?string $heading = 'Tren Kumulatif Data Usaha';
+    protected static ?int $sort = 3;
     protected int|string|array $columnSpan = 'full';
 
     public ?string $startDate = null;
@@ -79,7 +78,7 @@ class BusinessChart extends LineChartWidget
             }
         }
 
-        // Get daily data for the selected date range
+        // Get cumulative data for the selected date range
         $data = $query->select(
             DB::raw('DATE(created_at) as date'),
             DB::raw('count(*) as total')
@@ -106,7 +105,7 @@ class BusinessChart extends LineChartWidget
             return [
                 'datasets' => [
                     [
-                        'label' => 'Jumlah Data Usaha per Hari',
+                        'label' => 'Total Kumulatif Data Usaha',
                         'data' => array_fill(0, $dates->count(), 0),
                     ],
                 ],
@@ -116,11 +115,19 @@ class BusinessChart extends LineChartWidget
             ];
         }
 
+        // Calculate cumulative totals
+        $cumulativeData = [];
+        $runningTotal = 0;
+        foreach ($data as $row) {
+            $runningTotal += $row->total;
+            $cumulativeData[] = $runningTotal;
+        }
+
         return [
             'datasets' => [
                 [
-                    'label' => 'Jumlah Data Usaha per Hari',
-                    'data' => $data->pluck('total')->toArray(),
+                    'label' => 'Total Kumulatif Data Usaha',
+                    'data' => $cumulativeData,
                 ],
             ],
             'labels' => $data->pluck('date')->map(function ($date) {

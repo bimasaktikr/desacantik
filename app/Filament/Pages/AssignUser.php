@@ -200,20 +200,16 @@ class AssignUser extends Page implements HasForms, HasTable
                 ])
                 ->query(function (Builder $query, array $data) {
                     if (!empty($data['district_id'])) {
-                        $query->whereHas('area', function ($q) use ($data) {
-                            $q->whereHas('district', fn ($q) => $q->where('id', $data['district_id']));
+                        $query->whereHas('district', function ($q) use ($data) {
+                            $q->where('id', $data['district_id']);
                         });
                     }
                     if (!empty($data['village_id'])) {
-                        $query->whereHas('area', function ($q) use ($data) {
-                            $q->where('id', $data['village_id'])
-                                ->where('area_type', 'App\\Models\\Village');
-                        });
+                        $query->where('id', $data['village_id']);
                     }
                     if (!empty($data['sls_id'])) {
-                        $query->whereHas('area', function ($q) use ($data) {
-                            $q->where('id', $data['sls_id'])
-                                ->where('area_type', 'App\\Models\\Sls');
+                        $query->whereHas('sls', function ($q) use ($data) {
+                            $q->where('id', $data['sls_id']);
                         });
                     }
                 }),
