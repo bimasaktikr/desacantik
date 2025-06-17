@@ -1,0 +1,12 @@
+---
+deployment:
+  tasks:
+    - export DEPLOYPATH=/home/bpskotam/desacantik.bpskotamalang.id/sbr
+    - /bin/cp -R . $DEPLOYPATH # Copies all project files
+    - cd $DEPLOYPATH
+    - composer install --no-dev --optimize-autoloader # Installs PHP dependencies
+    - php artisan migrate --force # Runs database migrations
+    - php artisan config:cache # Caches configuration
+    - php artisan route:cache # Caches routes
+    - php artisan view:cache # Caches views
+    - php artisan storage:link # Creates symbolic link for storage folder

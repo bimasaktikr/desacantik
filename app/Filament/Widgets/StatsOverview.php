@@ -30,22 +30,47 @@ class StatsOverview extends BaseWidget
             $totalUploads = AssignmentUpload::whereIn('assignment_id', $assignmentIds)->count();
             $successUploads = AssignmentUpload::whereIn('assignment_id', $assignmentIds)->where('import_status', 'berhasil')->count();
             $failedUploads = AssignmentUpload::whereIn('assignment_id', $assignmentIds)->where('import_status', 'gagal')->count();
-        } elseif ($user->roles->contains('name', 'Petugas')) {
-            $assignedAreaIds = Assignment::whereHas('user', function ($q) {
-                $q->whereHas('roles', function ($r) {
-                    $r->where('name', 'Mahasiswa');
-                });
-            })->pluck('area_id')->toArray();
+        } elseif ($user->roles->contains('name', 'Employee')) {
+            // Get all area (village) IDs assigned to the employee
+            $employeeAreaIds = Assignment::where('user_id', $user->id)
+                ->where('area_type', 'App\\Models\\Village')
+                ->pluck('area_id')
+                ->toArray();
 
-            $query->whereIn('village_id', $assignedAreaIds);
-            $totalUploads = AssignmentUpload::whereHas('assignment', function ($q) use ($assignedAreaIds) {
-                $q->whereIn('area_id', $assignedAreaIds);
+            // Find all Mahasiswa who have assignments in those same areas
+            $mahasiswaUserIds = Assignment::whereIn('area_id', $employeeAreaIds)
+                ->where('area_type', 'App\\Models\\Village')
+                ->whereHas('user.roles', function ($q) {
+                    $q->where('name', 'Mahasiswa');
+                })
+                ->pluck('user_id')
+                ->unique()
+                ->toArray();
+
+            // Show stats for all businesses and uploads by those Mahasiswa in those areas
+            $query->whereIn('user_id', $mahasiswaUserIds)
+                ->whereIn('village_id', $employeeAreaIds);
+
+            $totalUploads = AssignmentUpload::whereIn('assignment_id', function ($q) use ($employeeAreaIds, $mahasiswaUserIds) {
+                $q->select('id')
+                  ->from('assignments')
+                  ->whereIn('area_id', $employeeAreaIds)
+                  ->whereIn('user_id', $mahasiswaUserIds)
+                  ->where('area_type', 'App\\Models\\Village');
             })->count();
-            $successUploads = AssignmentUpload::whereHas('assignment', function ($q) use ($assignedAreaIds) {
-                $q->whereIn('area_id', $assignedAreaIds);
+            $successUploads = AssignmentUpload::whereIn('assignment_id', function ($q) use ($employeeAreaIds, $mahasiswaUserIds) {
+                $q->select('id')
+                  ->from('assignments')
+                  ->whereIn('area_id', $employeeAreaIds)
+                  ->whereIn('user_id', $mahasiswaUserIds)
+                  ->where('area_type', 'App\\Models\\Village');
             })->where('import_status', 'berhasil')->count();
-            $failedUploads = AssignmentUpload::whereHas('assignment', function ($q) use ($assignedAreaIds) {
-                $q->whereIn('area_id', $assignedAreaIds);
+            $failedUploads = AssignmentUpload::whereIn('assignment_id', function ($q) use ($employeeAreaIds, $mahasiswaUserIds) {
+                $q->select('id')
+                  ->from('assignments')
+                  ->whereIn('area_id', $employeeAreaIds)
+                  ->whereIn('user_id', $mahasiswaUserIds)
+                  ->where('area_type', 'App\\Models\\Village');
             })->where('import_status', 'gagal')->count();
         }
 
