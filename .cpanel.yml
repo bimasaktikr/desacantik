@@ -4,9 +4,15 @@ deployment:
     - export DEPLOYPATH=/home/bpskotam/desacantik.bpskotamalang.id/sbr
     - /bin/cp -R . $DEPLOYPATH # Copies all project files
     - cd $DEPLOYPATH
-    - composer install --no-dev --optimize-autoloader # Installs PHP dependencies
+    - composer install --no-dev --no-interaction --optimize-autoloader # Installs PHP dependencies
+    - php artisan cache:clear # Clear existing cache
+    - php artisan config:clear # Clear existing config
+    - php artisan route:clear # Clear existing routes
+    - php artisan view:clear # Clear existing views
     - php artisan migrate --force # Runs database migrations
+    - php artisan optimize # Optimize the application
     - php artisan config:cache # Caches configuration
     - php artisan route:cache # Caches routes
     - php artisan view:cache # Caches views
     - php artisan storage:link # Creates symbolic link for storage folder
+    - php artisan queue:restart # Restart queue workers if using queues
