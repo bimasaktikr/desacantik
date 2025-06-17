@@ -27,6 +27,11 @@ class VillageResource extends Resource
 
     protected static ?int $navigationSort = 3;
 
+    public static function getNavigationBadge(): ?string
+    {
+        return (string) \App\Models\Village::count();
+    }
+
     public static function form(Form $form): Form
     {
         return $form

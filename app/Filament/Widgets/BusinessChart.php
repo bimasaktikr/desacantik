@@ -26,7 +26,12 @@ class BusinessChart extends LineChartWidget
     {
         $this->startDate = now()->subDays(14)->format('Y-m-d');
         $this->endDate = now()->format('Y-m-d');
-        // The villageId and userId will be set by the parent page or default to null
+
+        // For Mahasiswa role, set userId to current user
+        $user = Auth::user();
+        if ($user->roles->contains('name', 'Mahasiswa')) {
+            $this->userId = $user->id;
+        }
     }
 
     #[On('refreshChartData')]
@@ -57,13 +62,8 @@ class BusinessChart extends LineChartWidget
         } else {
             // Get assigned areas based on user role
             if ($user->roles->contains('name', 'Mahasiswa')) {
-                // For students, show only their assigned areas
-                $assignments = Assignment::where('user_id', $user->id)
-                    ->where('area_type', 'App\\Models\\Village')
-                    ->pluck('area_id')
-                    ->toArray();
-
-                $query->whereIn('village_id', $assignments);
+                // For students, show only their data
+                $query->where('user_id', $user->id);
             } elseif ($user->roles->contains('name', 'Petugas')) {
                 // For employees, show all areas assigned to students
                 $assignments = Assignment::whereHas('user', function ($q) {

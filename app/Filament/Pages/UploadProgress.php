@@ -28,6 +28,22 @@ class UploadProgress extends Page implements HasTable
 
     protected static string $view = 'filament.pages.upload-progress';
 
+    public static function shouldRegisterNavigation(): bool
+    {
+        /** @var \App\Models\User|null $user */
+        $user = Auth::user();
+        return $user?->roles->contains('name', 'supervisor') || $user?->roles->contains('name', 'employee') ?? false;
+    }
+
+    public function mount(): void
+    {
+        /** @var \App\Models\User|null $user */
+        $user = Auth::user();
+        if (!$user?->roles->contains('name', 'supervisor') && !$user?->roles->contains('name', 'employee')) {
+            redirect()->route('filament.admin.pages.dashboard');
+        }
+    }
+
     protected function getHeaderWidgets(): array
     {
         return [
@@ -98,9 +114,13 @@ class UploadProgress extends Page implements HasTable
 
         $user = Auth::user();
 
-        // Get assigned areas based on user role
-        if ($user->roles->contains('name', 'Mahasiswa')) {
-            // For students, show only their assigned areas
+        // If user is supervisor, show all uploads
+        if ($user->roles->contains('name', 'supervisor')) {
+            return $query;
+        }
+
+        // If user is employee, show only uploads from their assigned areas
+        if ($user->roles->contains('name', 'employee')) {
             $assignedAreaIds = Assignment::where('user_id', $user->id)
                 ->pluck('area_id')
                 ->toArray();
@@ -108,24 +128,8 @@ class UploadProgress extends Page implements HasTable
             $query->whereHas('assignment', function ($q) use ($assignedAreaIds) {
                 $q->whereIn('area_id', $assignedAreaIds);
             });
-        } elseif ($user->roles->contains('name', 'Petugas')) {
-            // For employees, show all areas assigned to students
-            $assignedAreaIds = Assignment::whereHas('user', function ($q) {
-                $q->whereHas('roles', function ($r) {
-                    $r->where('name', 'Mahasiswa');
-                });
-            })->pluck('area_id')->toArray();
-
-            $query->whereHas('assignment', function ($q) use ($assignedAreaIds) {
-                $q->whereIn('area_id', $assignedAreaIds);
-            });
         }
 
         return $query;
-    }
-
-    public static function shouldRegisterNavigation(): bool
-    {
-        return true;
     }
 }

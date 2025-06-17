@@ -24,6 +24,12 @@ class DistrictResource extends Resource
     protected static ?string $navigationLabel = 'Kecamatan';
     protected static ?int $navigationSort = 2;
 
+
+    public static function getNavigationBadge(): ?string
+    {
+        return (string) \App\Models\District::count();
+    }
+
     public static function form(Form $form): Form
     {
         return $form

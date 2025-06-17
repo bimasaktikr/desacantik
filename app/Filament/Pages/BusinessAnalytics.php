@@ -42,6 +42,10 @@ class BusinessAnalytics extends Page implements HasForms
     {
         $user = Auth::user();
 
+        if ($user->roles->contains('name', 'Mahasiswa')) {
+            $this->userId = $user->id;
+        }
+
         if (!$user->roles->contains('name', 'super_admin')) {
             $assignedAreas = Assignment::where('user_id', $user->id)->get();
 
@@ -116,9 +120,22 @@ class BusinessAnalytics extends Page implements HasForms
                             }),
                         Select::make('villageId')
                             ->label('Desa/Kelurahan')
-                            ->options(fn (Get $get): array => Village::where('district_id', $get('districtId'))
-                                ->pluck('name', 'id')
-                                ->toArray())
+                            ->options(function (Get $get) use ($user): array {
+                                if ($user->roles->contains('name', 'Mahasiswa')) {
+                                    // Only show villages where the user has assignments
+                                    $assignedVillageIds = Assignment::where('user_id', $user->id)
+                                        ->where('area_type', 'App\\Models\\Village')
+                                        ->pluck('area_id')
+                                        ->toArray();
+                                    return Village::whereIn('id', $assignedVillageIds)
+                                        ->pluck('name', 'id')
+                                        ->toArray();
+                                }
+                                // Default: filter by selected district
+                                return Village::where('district_id', $get('districtId'))
+                                    ->pluck('name', 'id')
+                                    ->toArray();
+                            })
                             ->placeholder('Pilih Desa/Kelurahan')
                             ->live()
                             ->afterStateUpdated(function (callable $set) {
@@ -136,8 +153,6 @@ class BusinessAnalytics extends Page implements HasForms
                             $usersQuery->whereHas('businesses'); // Users who have uploaded businesses
                         } else {
                             // Non-admins see users relevant to their assigned areas/roles
-                            // For simplicity, let's allow them to filter by users they can see data from.
-                            // This might need more complex logic based on your exact permission structure.
                             $usersQuery->whereHas('assignments', function ($q) use ($user) {
                                 $q->where('user_id', $user->id); // Only allow filtering by themselves initially
                             });
@@ -166,6 +181,8 @@ class BusinessAnalytics extends Page implements HasForms
                         return $usersQuery->pluck('name', 'id')->toArray();
                     })
                     ->placeholder('Pilih Petugas')
+                    ->default(fn () => Auth::user()->roles->contains('name', 'Mahasiswa') ? Auth::id() : null)
+                    ->visible(fn () => !Auth::user()->roles->contains('name', 'Mahasiswa'))
                     ->live()
                     ->afterStateUpdated(fn () => $this->refreshWidgets())
             ]);
