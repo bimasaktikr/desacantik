@@ -1,7 +1,7 @@
 ---
 deployment:
   tasks:
-    - export DEPLOYPATH=/home/bpskotam/desacantik.bpskotamalang.id/sbr
+    - export DEPLOYPATH=/home/bpskotam/pendataan-usaha.bpskotamalang.id
     - /bin/cp -R . $DEPLOYPATH # Copies all project files
     - cd $DEPLOYPATH
     - composer install --no-dev --no-interaction --optimize-autoloader # Installs PHP dependencies
