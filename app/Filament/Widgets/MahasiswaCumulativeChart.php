@@ -12,33 +12,21 @@ use Illuminate\Support\Str;
 use Carbon\Carbon;
 use App\Models\Village;
 
-class MahasiswaProgressLineChart extends LineChartWidget
+class MahasiswaCumulativeChart extends LineChartWidget
 {
-    public ?string $mode = 'uploads'; // 'uploads' or 'businesses'
     public ?string $districtId = null;
     public ?string $villageId = null;
 
-    protected static ?string $heading = 'Progress Mahasiswa (Time Series)';
-    protected static ?int $sort = 3;
+    protected static ?string $heading = 'Progress Kumulatif Mahasiswa';
+    protected static ?int $sort = 4;
     protected int|string|array $columnSpan = 'full';
-
-    public function getHeading(): string
-    {
-        return $this->mode === 'uploads' ? 'Progress Upload Mahasiswa' : 'Progress Data Usaha Mahasiswa';
-    }
 
     protected function getViewData(): array
     {
         return [
-            'mode' => $this->mode,
             'districtId' => $this->districtId,
             'villageId' => $this->villageId,
         ];
-    }
-
-    public function toggleMode($mode)
-    {
-        $this->mode = $mode;
     }
 
     protected function getData(): array
@@ -107,35 +95,29 @@ class MahasiswaProgressLineChart extends LineChartWidget
             $sharedVillageIds = array_intersect($employeeAreaIds, $mahasiswaVillageIds);
             if (empty($sharedVillageIds)) continue;
 
-            $dataPerDate = array_fill_keys($dates->toArray(), 0);
-            if ($this->mode === 'uploads') {
-                $assignmentIds = Assignment::where('user_id', $mahasiswa->id)
-                    ->where('area_type', 'App\\Models\\Village')
-                    ->whereIn('area_id', $sharedVillageIds)
-                    ->pluck('id');
-                $uploads = AssignmentUpload::whereIn('assignment_id', $assignmentIds)
-                    ->selectRaw('DATE(created_at) as date, COUNT(*) as total')
-                    ->whereBetween('created_at', [$startDate, $endDate])
-                    ->groupBy('date')
-                    ->pluck('total', 'date');
-                foreach ($uploads as $date => $count) {
-                    $dataPerDate[$date] = $count;
+            // Get daily data for the selected date range
+            $dailyData = Business::where('user_id', $mahasiswa->id)
+                ->whereIn('village_id', $sharedVillageIds)
+                ->selectRaw('DATE(created_at) as date, COUNT(*) as total')
+                ->whereBetween('created_at', [$startDate, $endDate])
+                ->groupBy('date')
+                ->orderBy('date')
+                ->pluck('total', 'date')
+                ->toArray();
+
+            // Calculate cumulative totals
+            $cumulativeData = [];
+            $runningTotal = 0;
+            foreach ($dates as $date) {
+                if (isset($dailyData[$date])) {
+                    $runningTotal += $dailyData[$date];
                 }
-            } else {
-                $businesses = Business::where('user_id', $mahasiswa->id)
-                    ->whereIn('village_id', $sharedVillageIds)
-                    ->selectRaw('DATE(created_at) as date, COUNT(*) as total')
-                    ->whereBetween('created_at', [$startDate, $endDate])
-                    ->groupBy('date')
-                    ->pluck('total', 'date');
-                foreach ($businesses as $date => $count) {
-                    $dataPerDate[$date] = $count;
-                }
+                $cumulativeData[] = $runningTotal;
             }
 
             $datasets[] = [
                 'label' => $mahasiswa->name,
-                'data' => array_values($dataPerDate),
+                'data' => $cumulativeData,
                 'borderColor' => $colors[$index % count($colors)],
                 'backgroundColor' => $colors[$index % count($colors)],
                 'tension' => 0.1,

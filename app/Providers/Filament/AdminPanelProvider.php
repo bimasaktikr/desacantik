@@ -101,9 +101,17 @@ class AdminPanelProvider extends PanelProvider
                     ->label('Administrasi Wilayah')
                     ->icon('heroicon-o-academic-cap')
                     ->collapsed(),
-                NavigationGroup::make('pendataan')
+                NavigationGroup::make('Monitoring')
+                    ->label('Monitoring')
+                    ->icon('heroicon-o-presentation-chart-line')
+                    ->collapsed(),
+                NavigationGroup::make('Pendataan')
                     ->label('Pendataan')
                     ->icon('heroicon-o-pencil-square')
+                    ->collapsed(),
+                NavigationGroup::make('Data Usaha')
+                    ->label('Data Usaha')
+                    ->icon('heroicon-o-building-storefront')
                     ->collapsed(),
                 NavigationGroup::make('peta')
                     ->label('Peta Digital')
@@ -121,13 +129,15 @@ class AdminPanelProvider extends PanelProvider
                     ->label('User')
                     ->icon('heroicon-o-user-group')
                     ->collapsed(),
-                NavigationGroup::make('shield')
+                NavigationGroup::make('Filament Shield')
                     ->label('Filament Shield')
                     ->icon('heroicon-o-shield-check')
                     ->collapsed(),
-            ])
-
-            ;
+                NavigationGroup::make('Log & Import')
+                    ->label('Log & Import')
+                    ->icon('heroicon-o-shield-check')
+                    ->collapsed(),
+            ]);
     }
 
     private function getPlugins(): array

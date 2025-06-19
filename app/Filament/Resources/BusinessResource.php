@@ -35,7 +35,7 @@ class BusinessResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
 
-    protected static ?string $navigationGroup = 'Pendataan';
+    protected static ?string $navigationGroup = 'Data Usaha';
 
     protected static ?string $navigationLabel = 'Data Usaha';
 

@@ -19,18 +19,29 @@ use App\Models\User;
 use Filament\Tables\Actions\Action;
 use Illuminate\Support\Facades\Log;
 use Livewire\Attributes\On;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\Grid;
+use App\Models\District;
+use App\Models\Village;
+use Filament\Forms\Concerns\InteractsWithForms;
+use Filament\Forms\Contracts\HasForms;
+use Filament\Forms\Form;
+use Filament\Forms\Get;
 
-class UploadProgress extends Page implements HasTable
+class UploadProgress extends Page implements HasTable, HasForms
 {
     use InteractsWithTable;
+    use InteractsWithForms;
 
-    public ?string $mode = 'uploads'; // Default mode for the chart
-    public string $activeTab = 'summary'; // Default active tab: 'summary' or 'chart'
+    public ?string $mode = 'table'; // Default mode for the table
+    public ?string $districtId = null;
+    public ?string $villageId = null;
+    public ?string $userId = null;
 
     protected static ?string $navigationIcon = 'heroicon-o-chart-bar';
     protected static ?string $navigationGroup = 'Monitoring';
-    protected static ?string $title = 'Progress Upload Data';
-    protected static ?string $navigationLabel = 'Progress Upload';
+    protected static ?string $title = 'Progress & Analytics';
+    protected static ?string $navigationLabel = 'Progress & Analytics';
     protected static ?string $slug = 'upload-progress';
 
     protected static string $view = 'filament.pages.upload-progress';
@@ -38,14 +49,14 @@ class UploadProgress extends Page implements HasTable
     #[On('tab-changed')]
     public function setActiveTab(string $tab): void
     {
-        $this->activeTab = $tab;
+        $this->mode = $tab;
     }
 
     public static function shouldRegisterNavigation(): bool
     {
         /** @var \App\Models\User|null $user */
         $user = Auth::user();
-        return $user?->roles->contains('name', 'supervisor') || $user?->roles->contains('name', 'Employee') ?? false;
+        return $user?->roles->contains('name', 'supervisor') || $user?->roles->contains('name', 'Employee') || $user?->roles->contains('name', 'super_admin')?? false;
     }
 
     public function mount(): void
@@ -61,200 +72,173 @@ class UploadProgress extends Page implements HasTable
     {
         return [
             StatsOverview::class,
-            // BusinessChart::class,
         ];
+    }
+
+    public function getDistricts()
+    {
+        return District::query()
+            ->pluck('name', 'id')
+            ->map(fn ($name, $id) => ['label' => $name, 'value' => $id])
+            ->values()
+            ->toArray();
+    }
+
+    public function getVillages()
+    {
+        if (!$this->districtId) {
+            return [];
+        }
+
+        return Village::query()
+            ->where('district_id', $this->districtId)
+            ->pluck('name', 'id')
+            ->map(fn ($name, $id) => ['label' => $name, 'value' => $id])
+            ->values()
+            ->toArray();
+    }
+
+    public function updatedDistrictId()
+    {
+        $this->villageId = null;
     }
 
     public function table(Table $table): Table
     {
-        $user = Auth::user();
-        if ($user->roles->contains('name', 'Employee')) {
-            // Get all village IDs assigned to the employee
-            $employeeAreaIds = Assignment::where('user_id', $user->id)
-                ->where('area_type', 'App\\Models\\Village')
-                ->pluck('area_id')
-                ->toArray();
-            Log::info('Employee village assignments', ['employee_id' => $user->id, 'village_ids' => $employeeAreaIds]);
-
-            // Find all Mahasiswa who have assignments in those same areas
-            $mahasiswaUserIds = Assignment::whereIn('area_id', $employeeAreaIds)
-                ->where('area_type', 'App\\Models\\Village')
-                ->whereHas('user.roles', function ($q) {
-                    $q->where('name', 'Mahasiswa');
-                })
-                ->pluck('user_id')
-                ->unique()
-                ->toArray();
-
-            // Query Mahasiswa users
-            $mahasiswaQuery = User::whereIn('id', $mahasiswaUserIds);
-
-            return $table
-                ->query($mahasiswaQuery)
-                ->columns([
-                    TextColumn::make('name')
-                        ->label('Mahasiswa')
-                        ->searchable()
-                        ->sortable(),
-                    TextColumn::make('uploads_count')
-                        ->label('Total Uploads')
-                        ->getStateUsing(function (User $record) use ($employeeAreaIds) {
-                            $mahasiswaVillageIds = Assignment::where('user_id', $record->id)
-                                ->where('area_type', 'App\\Models\\Village')
-                                ->pluck('area_id')
-                                ->toArray();
-                            $sharedVillageIds = array_intersect($employeeAreaIds, $mahasiswaVillageIds);
-                            Log::info('Shared village assignments', ['employee_id' => Auth::id(), 'mahasiswa_id' => $record->id, 'shared_village_ids' => $sharedVillageIds]);
-                            $assignmentIds = Assignment::where('user_id', $record->id)
-                                ->where('area_type', 'App\\Models\\Village')
-                                ->whereIn('area_id', $sharedVillageIds)
-                                ->pluck('id');
-                            return AssignmentUpload::whereIn('assignment_id', $assignmentIds)->count();
-                        }),
-                    TextColumn::make('success_uploads_count')
-                        ->label('Upload Berhasil')
-                        ->getStateUsing(function (User $record) use ($employeeAreaIds) {
-                            $mahasiswaVillageIds = Assignment::where('user_id', $record->id)
-                                ->where('area_type', 'App\\Models\\Village')
-                                ->pluck('area_id')
-                                ->toArray();
-                            $sharedVillageIds = array_intersect($employeeAreaIds, $mahasiswaVillageIds);
-                            $assignmentIds = Assignment::where('user_id', $record->id)
-                                ->where('area_type', 'App\\Models\\Village')
-                                ->whereIn('area_id', $sharedVillageIds)
-                                ->pluck('id');
-                            return AssignmentUpload::whereIn('assignment_id', $assignmentIds)
-                                ->where('import_status', 'berhasil')->count();
-                        }),
-                    TextColumn::make('failed_uploads_count')
-                        ->label('Upload Gagal')
-                        ->getStateUsing(function (User $record) use ($employeeAreaIds) {
-                            $mahasiswaVillageIds = Assignment::where('user_id', $record->id)
-                                ->where('area_type', 'App\\Models\\Village')
-                                ->pluck('area_id')
-                                ->toArray();
-                            $sharedVillageIds = array_intersect($employeeAreaIds, $mahasiswaVillageIds);
-                            $assignmentIds = Assignment::where('user_id', $record->id)
-                                ->where('area_type', 'App\\Models\\Village')
-                                ->whereIn('area_id', $sharedVillageIds)
-                                ->pluck('id');
-                            return AssignmentUpload::whereIn('assignment_id', $assignmentIds)
-                                ->where('import_status', 'gagal')->count();
-                        }),
-                    TextColumn::make('businesses_count')
-                        ->label('Total Data Usaha')
-                        ->getStateUsing(function (User $record) use ($employeeAreaIds) {
-                            $mahasiswaVillageIds = Assignment::where('user_id', $record->id)
-                                ->where('area_type', 'App\\Models\\Village')
-                                ->pluck('area_id')
-                                ->toArray();
-                            $sharedVillageIds = array_intersect($employeeAreaIds, $mahasiswaVillageIds);
-                            return Business::where('user_id', $record->id)
-                                ->whereIn('village_id', $sharedVillageIds)
-                                ->count();
-                        }),
-                    TextColumn::make('last_upload')
-                        ->label('Last Upload')
-                        ->getStateUsing(function (User $record) use ($employeeAreaIds) {
-                            $mahasiswaVillageIds = Assignment::where('user_id', $record->id)
-                                ->where('area_type', 'App\\Models\\Village')
-                                ->pluck('area_id')
-                                ->toArray();
-                            $sharedVillageIds = array_intersect($employeeAreaIds, $mahasiswaVillageIds);
-                            $assignmentIds = Assignment::where('user_id', $record->id)
-                                ->where('area_type', 'App\\Models\\Village')
-                                ->whereIn('area_id', $sharedVillageIds)
-                                ->pluck('id');
-                            $last = AssignmentUpload::whereIn('assignment_id', $assignmentIds)
-                                ->latest('created_at')
-                                ->first();
-                            return $last ? $last->created_at->format('d M Y H:i') : '-';
-                        }),
-                ])
-                ->actions([
-                    Action::make('view_uploads')
-                        ->label('Lihat Uploads')
-                        ->url(fn (User $record) => route('filament.admin.pages.upload-progress', ['mahasiswa' => $record->id]))
-                        ->openUrlInNewTab(),
-                ]);
-        }
-        // ... fallback to original table for other roles ...
         return $table
-            ->query($this->getTableQuery())
+            ->query(
+                AssignmentUpload::query()
+                    ->when($this->districtId, function ($query) {
+                        $query->whereHas('assignment', function ($q) {
+                            $q->whereHasMorph('area', [Village::class], function ($q) {
+                                $q->where('district_id', $this->districtId);
+                            });
+                        });
+                    })
+                    ->when($this->villageId, function ($query) {
+                        $query->whereHas('assignment', function ($q) {
+                            $q->whereHasMorph('area', [Village::class], function ($q) {
+                                $q->where('id', $this->villageId);
+                            });
+                        });
+                    })
+            )
             ->columns([
+                TextColumn::make('assignment.area.name')
+                    ->label('Desa')
+                    ->sortable()
+                    ->searchable(),
+                TextColumn::make('assignment.area.district.name')
+                    ->label('Kecamatan')
+                    ->sortable()
+                    ->searchable(),
                 TextColumn::make('user.name')
                     ->label('Petugas')
-                    ->searchable()
+                    ->sortable()
+                    ->searchable(),
+                TextColumn::make('total_rows')
+                    ->label('Total Data')
                     ->sortable(),
-                TextColumn::make('assignment.area.name')
-                    ->label('Wilayah')
-                    ->searchable()
+                TextColumn::make('processed_rows')
+                    ->label('Data Diproses')
                     ->sortable(),
-                TextColumn::make('created_at')
-                    ->label('Tanggal Upload')
-                    ->dateTime('d M Y H:i')
+                TextColumn::make('success_rows')
+                    ->label('Data Berhasil')
+                    ->badge()
+                    ->color('success')
+                    ->sortable(),
+                TextColumn::make('failed_rows')
+                    ->label('Data Gagal')
+                    ->badge()
+                    ->color('danger')
                     ->sortable(),
                 TextColumn::make('import_status')
                     ->label('Status')
                     ->badge()
                     ->color(fn (string $state): string => match ($state) {
-                        'pending' => 'gray',
+                        'completed' => 'success',
                         'processing' => 'warning',
-                        'berhasil' => 'success',
-                        'gagal' => 'danger',
+                        'failed' => 'danger',
                         default => 'gray',
                     }),
-                TextColumn::make('total_rows')
-                    ->label('Total Data')
-                    ->numeric(),
-                TextColumn::make('success_rows')
-                    ->label('Berhasil')
-                    ->numeric(),
-                TextColumn::make('failed_rows')
-                    ->label('Gagal')
-                    ->numeric(),
-                TextColumn::make('imported_at')
-                    ->label('Selesai')
+                TextColumn::make('created_at')
+                    ->label('Tanggal Upload')
                     ->dateTime('d M Y H:i')
                     ->sortable(),
             ])
+            ->defaultSort('created_at', 'desc')
             ->filters([
                 SelectFilter::make('import_status')
                     ->label('Status')
                     ->options([
-                        'pending' => 'Pending',
-                        'processing' => 'Processing',
-                        'berhasil' => 'Berhasil',
-                        'gagal' => 'Gagal',
+                        'completed' => 'Selesai',
+                        'processing' => 'Diproses',
+                        'failed' => 'Gagal',
                     ]),
             ])
-            ->defaultSort('created_at', 'desc');
+            ->actions([
+                Action::make('download')
+                    ->label('Download')
+                    ->icon('heroicon-o-download')
+                    ->url(fn (AssignmentUpload $record): string => route('filament.admin.resources.assignment-uploads.download', $record))
+                    ->openUrlInNewTab()
+                    ->visible(fn (AssignmentUpload $record): bool => $record->import_status === 'completed'),
+            ]);
     }
 
-    protected function getTableQuery(): Builder
+    public function form(Form $form): Form
     {
-        $query = AssignmentUpload::query()
-            ->with(['user', 'assignment.area'])
-            ->latest();
-
         $user = Auth::user();
+        $districtOptions = $this->getDistricts();
 
-        // If user is supervisor, show all uploads
-        if ($user->roles->contains('name', 'supervisor')) {
-            return $query;
-        }
+        return $form
+            ->schema([
+                Grid::make(2)
+                    ->schema([
+                        Select::make('districtId')
+                            ->label('Kecamatan')
+                            ->options($districtOptions)
+                            ->placeholder('Pilih Kecamatan')
+                            ->live()
+                            ->afterStateUpdated(function (callable $set) {
+                                $set('villageId', null);
+                                $set('userId', null);
+                                $this->refreshWidgets();
+                            }),
+                        Select::make('villageId')
+                            ->label('Desa/Kelurahan')
+                            ->options(function (Get $get) use ($user): array {
+                                if ($user->roles->contains('name', 'Mahasiswa')) {
+                                    // Only show villages where the user has assignments
+                                    $assignedVillageIds = Assignment::where('user_id', $user->id)
+                                        ->where('area_type', 'App\\Models\\Village')
+                                        ->pluck('area_id')
+                                        ->toArray();
+                                    return Village::whereIn('id', $assignedVillageIds)
+                                        ->pluck('name', 'id')
+                                        ->toArray();
+                                }
+                                // Default: filter by selected district
+                                return Village::where('district_id', $get('districtId'))
+                                    ->pluck('name', 'id')
+                                    ->toArray();
+                            })
+                            ->placeholder('Pilih Desa/Kelurahan')
+                            ->live()
+                            ->afterStateUpdated(function () {
+                                $this->refreshWidgets();
+                            }),
+                    ]),
+            ]);
+    }
 
-        // If user is employee, show only uploads from their assigned areas
-        if ($user->roles->contains('name', 'employee')) {
-            $assignedAreaIds = Assignment::where('user_id', $user->id)
-                ->pluck('area_id')
-                ->toArray();
+    public function refreshWidgets(): void
+    {
+        $this->dispatch('refreshChartData', villageId: $this->villageId, userId: $this->userId);
+    }
 
-            $query->whereHas('assignment', function ($q) use ($assignedAreaIds) {
-                $q->whereIn('area_id', $assignedAreaIds);
-            });
-        }
-
-        return $query;
+    public function applyFilter(): void
+    {
+        $this->refreshWidgets();
     }
 }

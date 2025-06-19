@@ -2,28 +2,23 @@
 
 namespace App\Filament\Resources;
 
-use App\Filament\Resources\AssignmentUploadResource\Pages;
-use App\Filament\Resources\AssignmentUploadResource\RelationManagers;
-use App\Models\AssignmentUpload;
-use Filament\Forms;
+use App\Filament\Resources\ImportLogResource\Pages;
+use App\Models\ImportLog;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
+use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\SoftDeletingScope;
 
-class AssignmentUploadResource extends Resource
+class ImportLogResource extends Resource
 {
-    protected static ?string $model = AssignmentUpload::class;
+    protected static ?string $model = ImportLog::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
 
+    protected static ?string $navigationGroup = 'Log & Import';
 
-    public static function shouldRegisterNavigation(): bool
-    {
-        return false;
-    }
+
     public static function form(Form $form): Form
     {
         return $form
@@ -36,7 +31,11 @@ class AssignmentUploadResource extends Resource
     {
         return $table
             ->columns([
-                //
+                TextColumn::make('message')
+                    ->label('Pesan'),
+                TextColumn::make('file_path'),
+                TextColumn::make('status'),
+
             ])
             ->filters([
                 //
@@ -63,9 +62,9 @@ class AssignmentUploadResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index' => Pages\ListAssignmentUploads::route('/'),
-            'create' => Pages\CreateAssignmentUpload::route('/create'),
-            'edit' => Pages\EditAssignmentUpload::route('/{record}/edit'),
+            'index' => Pages\ListImportLogs::route('/'),
+            'create' => Pages\CreateImportLog::route('/create'),
+            'edit' => Pages\EditImportLog::route('/{record}/edit'),
         ];
     }
 }

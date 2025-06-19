@@ -12,6 +12,8 @@ use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
+use Livewire\Livewire;
+use App\Livewire\ShowVillageMap;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -44,7 +46,6 @@ class AppServiceProvider extends ServiceProvider
             Js::make('leaflet-js' , 'https://unpkg.com/leaflet@1.9.3/dist/leaflet.js'),
         ]);
 
-
-
+        Livewire::component('show-village-map', ShowVillageMap::class);
     }
 }

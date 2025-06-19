@@ -14,68 +14,85 @@ use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Storage;
-
+use Livewire\Attributes\On;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 
 class VillageDigitalMap extends Page implements HasTable
 {
     use InteractsWithTable;
 
-    protected static ?string $navigationIcon = 'heroicon-o-document-text';
-
-    protected static string $view = 'filament.pages.village-digital-map';
-
-    protected static ?string $navigationGroup = 'Peta Digital';
-
+    protected static ?string $navigationIcon = 'heroicon-o-map';
     protected static ?string $navigationLabel = 'Peta Digital Desa';
+    protected static ?string $navigationGroup = 'Peta Digital';
     protected static ?string $title = 'Peta Digital Desa';
     protected static ?string $slug = 'village-digital-map';
-    protected static ?int $navigationSort = 2;
-
+    protected static ?int $navigationSort = 3;
+    protected static string $view = 'filament.pages.village-digital-map';
 
     public function table(Table $table): Table
     {
         return $table
-            ->query(Village::query())
+            ->query(
+                Village::query()
+                    ->when(Auth::user()->roles->contains('name', 'Employee'), function (Builder $query) {
+                        $query->whereIn('id', Auth::user()->employee->villages->pluck('id'));
+                    })
+            )
             ->columns([
-                TextColumn::make('code')
-                    ->label('ID Desa/Kelurahan')
-                    ->searchable()
-                    ->sortable(),
                 TextColumn::make('name')
-                    ->label('Nama Desa/Kelurahan')
+                    ->label('Nama Desa')
                     ->searchable()
                     ->sortable(),
                 TextColumn::make('district.name')
-                    ->label('Nama Kecamatan')
-                    ->searchable()
-                    ->sortable()
-
-            ])
-            ->filters([
-                SelectFilter::make('district_id')
                     ->label('Kecamatan')
-                    ->options(\App\Models\District::pluck('name', 'id')->toArray())
-                    ->query(function (Builder $query, array $data) {
-                        if ($data['value']) {
-                            $query->where('district_id', $data['value']);
-                        }
-                    }),
-
+                    ->searchable()
+                    ->sortable(),
+                TextColumn::make('geojson_path')
+                    ->label('Status Peta')
+                    ->formatStateUsing(fn ($state) => $state ? 'Tersedia' : 'Belum Tersedia')
+                    ->badge()
+                    ->color(fn ($state) => $state ? 'success' : 'danger'),
             ])
             ->actions([
+                Action::make('viewMap')
+                    ->label('Lihat Peta')
+                    ->icon('heroicon-o-map')
+                    ->visible(fn (Village $record) => $record->geojson_path)
+                    ->action(function (Village $record) {
+                        Log::info('Dispatching showMap event for village: ' . $record->id);
+                        $this->dispatch('showMap', villageId: $record->id)->to('show-village-map');
+                    }),
                 Action::make('download')
                     ->label('Download')
                     ->icon('heroicon-o-arrow-down-tray')
                     ->color('success')
-                    ->action(function ($record) {
+                    ->visible(fn (Village $record) => $record->geojson_path)
+                    ->action(function (Village $record) {
                         return response()->download(Storage::disk('public')->path($record->geojson_path));
                     }),
-                Action::make('Lihat Peta')
-                    ->action(fn ($record, $livewire) => $livewire->dispatch('showMap', $record->id)),
-            ]);
-
+            ])
+            ->defaultSort('name');
     }
 
+    protected function getHeaderWidgets(): array
+    {
+        return [];
+    }
+
+    public function getViewData(): array
+    {
+        return [
+            'villagesWithoutMap' => Village::when(Auth::user()->roles->contains('name', 'Employee'), function ($query) {
+                $query->whereIn('id', Auth::user()->employee->villages->pluck('id'));
+            })->whereNull('geojson_path')->count(),
+        ];
+    }
+
+    public function getView(): string
+    {
+        return static::$view;
+    }
 
     public function splitBasemap()
     {
@@ -95,10 +112,4 @@ class VillageDigitalMap extends Page implements HasTable
             'message' => 'Berhasil membagi basemap ke desa-desa.',
         ]);
     }
-
-
-
-
-
-
 }
