@@ -22,6 +22,12 @@ class UpdatingKopindagBusiness extends Page implements HasTable
     protected static string $view = 'filament.pages.updating-kopindag-business';
     protected static ?string $navigationGroup = 'Pendataan';
 
+    public static function shouldRegisterNavigation(): bool
+    {
+        return auth()->user()?->hasRole('super_admin');
+    }
+
+
     public function table(Tables\Table $table): Tables\Table
     {
         return $table
