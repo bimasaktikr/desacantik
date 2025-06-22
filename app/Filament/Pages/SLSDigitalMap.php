@@ -102,8 +102,7 @@ class SLSDigitalMap extends Page implements HasTable
                     ->action(function ($record) {
                         return response()->download(Storage::disk('public')->path($record->geojson_path));
                     }),
-                Action::make('Lihat Peta')
-                    ->action(fn ($record, $livewire) => $livewire->dispatch('showMap', $record->id)),
+
             ]);
     }
 
