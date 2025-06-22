@@ -24,8 +24,9 @@ class BusinessesImport implements ToCollection, WithHeadingRow, WithStartRow, Wi
     protected $upload;
     protected $processedRows = 0;
     protected $successRows = 0;
-    protected  $failedRows = 0;
+    protected $failedRows = 0;
     protected $village_id;
+    protected $failures = [];
 
     public function __construct($assignment_id, AssignmentUpload $upload = null)
     {
@@ -53,10 +54,10 @@ class BusinessesImport implements ToCollection, WithHeadingRow, WithStartRow, Wi
             'status_bangunan_usaha' => 'required|in:Tetap,Tidak Tetap',
             'kategori_lapangan_usaha' => 'required|string',
             'deskripsi_aktifitas' => 'required|string',
-            'sls' => 'nullable|string',
+            'sls' => 'required|string',
             'latitude' => 'required|numeric|between:-90,90',
             'longitude' => 'required|numeric|between:-180,180',
-            'catatan_lantaibloksektor' => 'nullable|string',
+            'catatan_lantaibloksektor' => 'required|string',
             'apakah_pertokoan' => 'nullable|in:Ya,Tidak',
             'nama_pemilik_usaha' => 'nullable|string|max:255',
             'jenis_kelamin' => 'nullable|in:Laki-Laki,Perempuan',
@@ -110,6 +111,8 @@ class BusinessesImport implements ToCollection, WithHeadingRow, WithStartRow, Wi
             'apakah_pemilik_mau_mengikuti_pembinaan.in' => 'Pembinaan harus Ya atau Tidak',
             'apakah_memiliki_online.in' => 'Status online harus Ya atau Tidak',
             'apakah_pertokoan.in' => 'Pertokoan harus Ya atau Tidak',
+            'sls.required' => 'Kolom SLS harus diisi',
+            'catatan_lantaibloksektor.required' => 'Kolom Catatan Lantai Blok Sektor harus diisi',
         ];
     }
 
@@ -117,9 +120,9 @@ class BusinessesImport implements ToCollection, WithHeadingRow, WithStartRow, Wi
     {
         $assignment = Assignment::with('area')->findOrFail($this->assignment_id);
         $this->village_id = $assignment->area->id;
-        $defaultSls = Sls::where('village_id', $this->village_id)->firstOrFail();
 
         foreach ($rows as $index => $row) {
+            $rowNumber = $index + 2; // Assuming start row is 2
             try {
                 // Convert numeric fields to appropriate types
                 $data = [
@@ -165,8 +168,14 @@ class BusinessesImport implements ToCollection, WithHeadingRow, WithStartRow, Wi
                 ];
 
                 // Handle SLS ID
-                $sls = !empty($row['sls']) ? Sls::where('name', $row['sls'])->where('village_id', $this->village_id)->first() : null;
-                $data['sls_id'] = $sls ? $sls->id : $defaultSls->id;
+                $sls = !empty($row['sls']) ? Sls::where('name', 'like', '%' . $row['sls'] . '%')->where('village_id', $this->village_id)->first() : null;
+                if (!$sls) {
+                    $this->failures[] = "Baris {$rowNumber}: SLS '{$row['sls']}' tidak ditemukan untuk desa ini.";
+                    $this->failedRows++;
+                    $this->processedRows++;
+                    continue;
+                }
+                $data['sls_id'] = $sls->id;
 
                 // Handle Business Category ID
                 $category = null;
@@ -204,18 +213,25 @@ class BusinessesImport implements ToCollection, WithHeadingRow, WithStartRow, Wi
                 }
 
                 $this->successRows++;
+            } catch (ValidationException $e) {
+                $this->failedRows++;
+                $errors = $e->errors();
+                foreach ($errors as $attribute => $errorMessages) {
+                    $this->failures[] = "Baris {$rowNumber}: " . implode(', ', $errorMessages);
+                }
             } catch (\Exception $e) {
-                Log::error('Error processing row: ' . ($index + 2), [
+                $this->failedRows++;
+                $this->failures[] = "Baris {$rowNumber}: Terjadi error - " . $e->getMessage();
+                Log::error('Error processing row: ' . $rowNumber, [
                     'row' => $row->toArray(),
                     'error' => $e->getMessage(),
                     'trace' => $e->getTraceAsString()
                 ]);
-                $this->failedRows++;
             }
             $this->processedRows++;
         }
 
-        $this->upload?->updateProgress($this->processedRows, $this->successRows, $this->failedRows);
+        $this->upload?->updateProgress($this->processedRows, $this->successRows, $this->failedRows, $this->failures);
     }
 
     protected function parseDateTime($dateTime)

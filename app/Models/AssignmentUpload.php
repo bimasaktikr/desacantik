@@ -45,21 +45,29 @@ class AssignmentUpload extends Model
         return $this->belongsTo(User::class);
     }
 
-    public function updateProgress(int $processed, int $success, int $failed): void
+    public function updateProgress(int $processed, int $success, int $failed, array $failures = []): void
     {
-        $this->update([
-            'processed_rows' => $processed,
-            'success_rows' => $success,
-            'failed_rows' => $failed
-        ]);
+        $this->processed_rows = $processed;
+        $this->success_rows = $success;
+        $this->failed_rows = $failed;
+
+        if (!empty($failures)) {
+            $this->error_message = implode("\n", $failures);
+        }
+
+        $this->save();
     }
 
     public function markAsCompleted(): void
     {
-        $this->update([
-            'import_status' => 'berhasil',
-            'imported_at' => now()
-        ]);
+        $this->import_status = 'berhasil';
+        $this->imported_at = now();
+
+        if ($this->failed_rows > 0) {
+            $this->import_status = 'gagal';
+        }
+
+        $this->save();
     }
 
     public function markAsFailed(string $error): void

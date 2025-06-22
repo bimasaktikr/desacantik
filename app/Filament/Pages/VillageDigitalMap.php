@@ -55,14 +55,14 @@ class VillageDigitalMap extends Page implements HasTable
                     ->color(fn ($state) => $state ? 'success' : 'danger'),
             ])
             ->actions([
-                Action::make('viewMap')
-                    ->label('Lihat Peta')
-                    ->icon('heroicon-o-map')
-                    ->visible(fn (Village $record) => $record->geojson_path)
-                    ->action(function (Village $record) {
-                        Log::info('Dispatching showMap event for village: ' . $record->id);
-                        $this->dispatch('showMap', villageId: $record->id)->to('show-village-map');
-                    }),
+                // Action::make('viewMap')
+                //     ->label('Lihat Peta')
+                //     ->icon('heroicon-o-map')
+                //     ->visible(fn (Village $record) => $record->geojson_path)
+                //     ->action(function (Village $record) {
+                //         Log::info('Dispatching showMap event for village: ' . $record->id);
+                //         $this->dispatch('showMap', villageId: $record->id)->to('show-village-map');
+                //     }),
                 Action::make('download')
                     ->label('Download')
                     ->icon('heroicon-o-arrow-down-tray')
