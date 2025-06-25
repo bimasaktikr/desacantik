@@ -37,6 +37,13 @@
                 >
                     Cumulative Business Chart
                 </x-filament::tabs.item>
+                <x-filament::tabs.item
+                    :active="$mode === 'village-summary'"
+                    wire:click="$set('mode', 'village-summary')"
+                    class="transition-colors duration-200"
+                >
+                    Village Business Summary
+                </x-filament::tabs.item>
             </x-filament::tabs>
         </div>
 
@@ -65,6 +72,10 @@
                 'districtId' => $districtId,
                 'villageId' => $villageId
             ])
+        </div>
+
+        <div x-show="mode === 'village-summary'" x-transition>
+            <x-filament::table :table="$villageBusinessSummaryTable" />
         </div>
     </div>
 </x-filament-panels::page>

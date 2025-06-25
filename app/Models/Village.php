@@ -32,4 +32,9 @@ class Village extends Model
     {
         return $this->morphMany(\App\Models\Assignment::class, 'area');
     }
+
+    public function sls()
+    {
+        return $this->hasMany(\App\Models\Sls::class);
+    }
 }

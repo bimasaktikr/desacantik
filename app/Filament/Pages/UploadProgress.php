@@ -27,6 +27,7 @@ use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Forms\Contracts\HasForms;
 use Filament\Forms\Form;
 use Filament\Forms\Get;
+use App\Filament\Widgets\VillageBusinessSummary;
 
 class UploadProgress extends Page implements HasTable, HasForms
 {
@@ -37,6 +38,7 @@ class UploadProgress extends Page implements HasTable, HasForms
     public ?string $districtId = null;
     public ?string $villageId = null;
     public ?string $userId = null;
+    public $villageBusinessSummaryTable;
 
     protected static ?string $navigationIcon = 'heroicon-o-chart-bar';
     protected static ?string $navigationGroup = 'Monitoring';
@@ -63,9 +65,10 @@ class UploadProgress extends Page implements HasTable, HasForms
     {
         /** @var \App\Models\User|null $user */
         $user = Auth::user();
-        if (!$user?->roles->contains('name', 'supervisor') && !$user?->roles->contains('name', 'Employee')) {
+        if (!$user?->roles->contains('name', 'super_admin') && !$user?->roles->contains('name', 'Employee')) {
             redirect()->route('filament.admin.pages.dashboard');
         }
+        $this->villageBusinessSummaryTable = $this->getVillageBusinessSummaryTable();
     }
 
     protected function getHeaderWidgets(): array
@@ -73,6 +76,12 @@ class UploadProgress extends Page implements HasTable, HasForms
         return [
             StatsOverview::class,
         ];
+    }
+
+    public function getVillageBusinessSummaryTable()
+    {
+        $widget = app(\App\Filament\Widgets\VillageBusinessSummary::class);
+        return $widget->table(app(\Filament\Tables\Table::class));
     }
 
     public function getDistricts()

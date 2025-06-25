@@ -42,7 +42,7 @@
         </div>
 
         {{-- 4. Charts --}}
-        <div>
+        <div class="mt-10">
             <div x-show="activeTab === 'daily'" x-transition>
                 @livewire(\App\Filament\Widgets\BusinessChart::class, ['villageId' => $this->villageId, 'userId' => $this->userId], key($this->villageId . '_daily'))
             </div>
