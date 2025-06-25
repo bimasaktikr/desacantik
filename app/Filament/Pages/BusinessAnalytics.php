@@ -38,6 +38,14 @@ class BusinessAnalytics extends Page implements HasForms
     public string $activeTab = 'daily';
     public ?string $userId = null;
 
+    // Determine if the navbar should be registered for this page
+    public function shouldRegisterNavigation(): bool
+    {
+        // Only show in navigation for super_admin and Employee roles
+        $user = Auth::user();
+        return $user && ($user->roles->contains('name', 'super_admin') || $user->roles->contains('name', 'Mahasiswa'));
+    }
+
     public function mount(): void
     {
         $user = Auth::user();
