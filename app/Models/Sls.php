@@ -37,4 +37,9 @@ class Sls extends Model
     {
         return $this->morphMany(\App\Models\Assignment::class, 'area');
     }
+
+    public function businesses()
+    {
+        return $this->hasMany(\App\Models\Business::class);
+    }
 }
