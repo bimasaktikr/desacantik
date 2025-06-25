@@ -109,100 +109,58 @@ class UploadProgress extends Page implements HasTable, HasForms
     public function table(Table $table): Table
     {
         $user = Auth::user();
-        $query = AssignmentUpload::query();
 
-        if (!$user->roles->contains('name', 'super_admin')) {
-            // Get assigned village IDs for the user
+        if ($user->roles->contains('name', 'super_admin')) {
+            $villageQuery = Village::query();
+        } else {
             $assignedVillageIds = Assignment::where('user_id', $user->id)
                 ->where('area_type', 'App\\Models\\Village')
                 ->pluck('area_id')
                 ->toArray();
-            // Only show uploads where the assignment's area is a village assigned to the user
-            $query->whereHas('assignment', function ($q) use ($assignedVillageIds) {
-                $q->where('area_type', 'App\\Models\\Village')
-                  ->whereIn('area_id', $assignedVillageIds);
-            });
+            $villageQuery = Village::query()->whereIn('id', $assignedVillageIds);
         }
 
         return $table
-            ->query(
-                $query
-                    ->when($this->districtId, function ($query) {
-                        $query->whereHas('assignment', function ($q) {
-                            $q->whereHasMorph('area', [Village::class], function ($q) {
-                                $q->where('district_id', $this->districtId);
-                            });
-                        });
-                    })
-                    ->when($this->villageId, function ($query) {
-                        $query->whereHas('assignment', function ($q) {
-                            $q->whereHasMorph('area', [Village::class], function ($q) {
-                                $q->where('id', $this->villageId);
-                            });
-                        });
-                    })
-            )
+            ->query($villageQuery)
             ->columns([
-                TextColumn::make('assignment.area.name')
-                    ->label('Desa')
+                TextColumn::make('name')
+                    ->label('Village')
                     ->sortable()
                     ->searchable(),
-                TextColumn::make('assignment.area.district.name')
-                    ->label('Kecamatan')
-                    ->sortable()
-                    ->searchable(),
-                TextColumn::make('user.name')
-                    ->label('Petugas')
-                    ->sortable()
-                    ->searchable(),
-                TextColumn::make('total_rows')
-                    ->label('Total Data')
-                    ->sortable(),
-                TextColumn::make('processed_rows')
-                    ->label('Data Diproses')
-                    ->sortable(),
-                TextColumn::make('success_rows')
-                    ->label('Data Berhasil')
-                    ->badge()
-                    ->color('success')
-                    ->sortable(),
-                TextColumn::make('failed_rows')
-                    ->label('Data Gagal')
-                    ->badge()
-                    ->color('danger')
-                    ->sortable(),
-                TextColumn::make('import_status')
-                    ->label('Status')
-                    ->badge()
-                    ->color(fn (string $state): string => match ($state) {
-                        'completed' => 'success',
-                        'processing' => 'warning',
-                        'failed' => 'danger',
-                        default => 'gray',
+                TextColumn::make('completed_uploads')
+                    ->label('Completed')
+                    ->getStateUsing(function ($record) {
+                        return AssignmentUpload::whereHas('assignment', function ($q) use ($record) {
+                            $q->where('area_type', 'App\\Models\\Village')
+                              ->where('area_id', $record->id);
+                        })->where('import_status', 'completed')->count();
                     }),
-                TextColumn::make('created_at')
-                    ->label('Tanggal Upload')
-                    ->dateTime('d M Y H:i')
-                    ->sortable(),
+                TextColumn::make('processing_uploads')
+                    ->label('Processing')
+                    ->getStateUsing(function ($record) {
+                        return AssignmentUpload::whereHas('assignment', function ($q) use ($record) {
+                            $q->where('area_type', 'App\\Models\\Village')
+                              ->where('area_id', $record->id);
+                        })->where('import_status', 'processing')->count();
+                    }),
+                TextColumn::make('failed_uploads')
+                    ->label('Failed')
+                    ->getStateUsing(function ($record) {
+                        return AssignmentUpload::whereHas('assignment', function ($q) use ($record) {
+                            $q->where('area_type', 'App\\Models\\Village')
+                              ->where('area_id', $record->id);
+                        })->where('import_status', 'failed')->count();
+                    }),
+                TextColumn::make('total_uploads')
+                    ->label('Total Uploads')
+                    ->getStateUsing(function ($record) {
+                        return AssignmentUpload::whereHas('assignment', function ($q) use ($record) {
+                            $q->where('area_type', 'App\\Models\\Village')
+                              ->where('area_id', $record->id);
+                        })->count();
+                    }),
             ])
-            ->defaultSort('created_at', 'desc')
-            ->filters([
-                SelectFilter::make('import_status')
-                    ->label('Status')
-                    ->options([
-                        'completed' => 'Selesai',
-                        'processing' => 'Diproses',
-                        'failed' => 'Gagal',
-                    ]),
-            ])
-            ->actions([
-                Action::make('download')
-                    ->label('Download')
-                    ->icon('heroicon-o-download')
-                    ->url(fn (AssignmentUpload $record): string => route('filament.admin.resources.assignment-uploads.download', $record))
-                    ->openUrlInNewTab()
-                    ->visible(fn (AssignmentUpload $record): bool => $record->import_status === 'completed'),
-            ]);
+            ->defaultSort('name');
     }
 
     public function form(Form $form): Form
