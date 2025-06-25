@@ -68,20 +68,14 @@ class UploadProgress extends Page implements HasTable, HasForms
         if (!$user?->roles->contains('name', 'super_admin') && !$user?->roles->contains('name', 'Employee')) {
             redirect()->route('filament.admin.pages.dashboard');
         }
-        $this->villageBusinessSummaryTable = $this->getVillageBusinessSummaryTable();
     }
 
     protected function getHeaderWidgets(): array
     {
         return [
             StatsOverview::class,
+            // VillageBusinessSummary::class,
         ];
-    }
-
-    public function getVillageBusinessSummaryTable()
-    {
-        $widget = app(\App\Filament\Widgets\VillageBusinessSummary::class);
-        return $widget->table(app(\Filament\Tables\Table::class));
     }
 
     public function getDistricts()

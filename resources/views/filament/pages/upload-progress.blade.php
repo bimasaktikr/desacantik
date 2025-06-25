@@ -37,6 +37,7 @@
                 >
                     Cumulative Business Chart
                 </x-filament::tabs.item>
+
                 <x-filament::tabs.item
                     :active="$mode === 'village-summary'"
                     wire:click="$set('mode', 'village-summary')"
@@ -75,7 +76,10 @@
         </div>
 
         <div x-show="mode === 'village-summary'" x-transition>
-            <x-filament::table :table="$villageBusinessSummaryTable" />
+            @livewire(\App\Filament\Widgets\VillageBusinessSummary::class, [
+                'districtId' => $districtId,
+                'villageId' => $villageId
+            ])
         </div>
     </div>
 </x-filament-panels::page>
