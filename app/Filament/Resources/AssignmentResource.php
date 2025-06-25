@@ -5,6 +5,8 @@ namespace App\Filament\Resources;
 use App\Filament\Resources\AssignmentResource\Pages;
 use App\Filament\Resources\AssignmentResource\RelationManagers;
 use App\Models\Assignment;
+use App\Models\District;
+use App\Models\Village;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
@@ -12,6 +14,7 @@ use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
+use Filament\Forms\Components\Select;
 
 class AssignmentResource extends Resource
 {
@@ -49,33 +52,52 @@ class AssignmentResource extends Resource
                 Tables\Columns\TextColumn::make('area_id')
                     ->label('Area ID')
                     ->sortable(),
+                Tables\Columns\TextColumn::make('area_name')
+                    ->label('Area Name')
+                    ->getStateUsing(function ($record) {
+                        return $record->area?->name ?? '-';
+                    })
+                    ->searchable(),
                 Tables\Columns\TextColumn::make('user.name')
                     ->label('User')
-                    ->sortable(),
+                    ->sortable()
+                    ->searchable(),
                 Tables\Columns\TextColumn::make('created_at')
                     ->label('Created At')
                     ->dateTime('d M Y H:i')
                     ->sortable(),
-                Tables\Columns\TextColumn::make('import_status')
-                    ->label('Status')
-                    ->badge()
-                    ->color(fn (string $state): string => match ($state) {
-                        'pending' => 'gray',
-                        'processing' => 'warning',
-                        'berhasil' => 'success',
-                        'gagal' => 'danger',
-                        default => 'gray',
-                    }),
             ])
             ->filters([
-                Tables\Filters\SelectFilter::make('import_status')
-                    ->label('Status')
-                    ->options([
-                        'pending' => 'Pending',
-                        'processing' => 'Processing',
-                        'berhasil' => 'Berhasil',
-                        'gagal' => 'Gagal',
-                    ]),
+
+                Tables\Filters\SelectFilter::make('area_location')
+                    ->label('Location')
+                    ->form([
+                        Select::make('district_id')
+                            ->label('District')
+                            ->options(District::pluck('name', 'id'))
+                            ->reactive()
+                            ->afterStateUpdated(fn (callable $set) => $set('village_id', null)),
+                        Select::make('village_id')
+                            ->label('Village')
+                            ->options(function (callable $get) {
+                                $districtId = $get('district_id');
+                                return $districtId
+                                    ? Village::where('district_id', $districtId)->pluck('name', 'id')
+                                    : [];
+                            })
+                            ->reactive(),
+                    ])
+                    ->query(function ($query, array $data) {
+                        if (!empty($data['district_id'])) {
+                            $villageIds = Village::where('district_id', $data['district_id'])->pluck('id')->toArray();
+                            $query->where('area_type', 'App\\Models\\Village')
+                                  ->whereIn('area_id', $villageIds);
+                        }
+                        if (!empty($data['village_id'])) {
+                            $query->where('area_type', 'App\\Models\\Village')
+                                  ->where('area_id', $data['village_id']);
+                        }
+                    }),
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),
