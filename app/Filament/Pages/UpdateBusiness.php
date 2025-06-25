@@ -107,9 +107,15 @@ class UpdateBusiness extends Page implements HasTable
             ->actions([
                 EditAction::make()
                     ->form([
-                        TextInput::make('name')->required()->label('Business Name'),
-                        TextInput::make('description')->label('Description'),
-                        TextInput::make('address')->required()->label('Address'),
+                        TextInput::make('name')
+                            ->required()
+                            ->label('Business Name'),
+                        TextInput::make('description')
+                            ->required()
+                            ->label('Description'),
+                        TextInput::make('address')
+                            ->required()
+                            ->label('Address'),
                         Select::make('business_category_id')
                             ->label('Category')
                             ->relationship('businessCategory', 'code')
