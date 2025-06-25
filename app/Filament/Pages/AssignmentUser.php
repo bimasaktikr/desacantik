@@ -207,6 +207,10 @@ class AssignmentUser extends Page implements HasTable, HasForms
             TextColumn::make('failed_rows')
                 ->label('Gagal')
                 ->numeric(),
+            TextColumn::make('error_message')
+                ->label('Pesan Error')
+                ->wrap()
+                ->limit(100),
         ];
     }
 
