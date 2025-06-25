@@ -49,48 +49,66 @@ class UpdateBusiness extends Page implements HasTable
             ->query($query)
             ->columns([
                 Split::make([
-                    TextColumn::make('name')
-                        ->label('Business Name')
-                        ->weight(FontWeight::Bold)
-                        ->searchable()
-                        ->sortable(),
+                    Stack::make([
+                        TextColumn::make('name')
+                            ->label('Business Name')
+                            ->weight(FontWeight::Bold)
+                            ->searchable()
+                            ->sortable(),
+                        TextColumn::make('description')
+                            ->label('Description')
+                            ->color('gray')
+                            ->size('sm')
+                            ->wrap()
+                            ->limit(50),
+                    ]),
+
                     Stack::make([
                         TextColumn::make('address')
-                            ->label('Address'),
-                        TextColumn::make('business_category')
-                            ->label('Category')
-                            ->getStateUsing(function ($record) {
-                                return optional($record->businessCategory)->code . ' - ' . optional($record->businessCategory)->description;
-                            }),
+                            ->label('Address')
+                            ->color('gray')
+                            ->size('sm'),
+                        TextColumn::make('village.name')
+                            ->label('Village')
+                            ->sortable(),
+                        TextColumn::make('sls.name')
+                            ->label('SLS')
+                            ->sortable(),
+
                     ]),
                 ])->from('md'),
-                TextColumn::make('village.name')
-                    ->label('Village')
-                    ->sortable(),
-                TextColumn::make('sls.name')
-                    ->label('SLS')
-                    ->sortable(),
+
+                TextColumn::make('business_category')
+                    ->label('Category')
+                    ->badge()
+                    ->color('info')
+                    ->getStateUsing(function ($record) {
+                        return optional($record->businessCategory)->code . ' - ' . optional($record->businessCategory)->description;
+                    }),
                 TextColumn::make('status_bangunan')
                     ->label('Building Status')
+                    ->badge()
+                    ->color('warning')
                     ->sortable(),
                 TextColumn::make('owner_name')
                     ->label('Owner Name')
+                    ->color('primary')
                     ->sortable()
                     ->searchable(),
                 TextColumn::make('phone')
                     ->label('Phone')
+                    ->icon('heroicon-m-phone')
                     ->sortable(),
                 TextColumn::make('email')
                     ->label('Email')
-                    ->sortable(),
-                TextColumn::make('online_status')
-                    ->label('Online Status')
+                    ->icon('heroicon-m-envelope')
                     ->sortable(),
             ])
             ->actions([
                 EditAction::make()
                     ->form([
                         TextInput::make('name')->required()->label('Business Name'),
+                        TextInput::make('description')->label('Description'),
                         TextInput::make('address')->required()->label('Address'),
                         Select::make('business_category_id')
                             ->label('Category')
@@ -98,6 +116,7 @@ class UpdateBusiness extends Page implements HasTable
                             ->getOptionLabelFromRecordUsing(fn ($record) => $record->code . ' - ' . $record->description)
                             ->required(),
                     ]),
-            ]);
+            ])
+            ->striped();
     }
 }
