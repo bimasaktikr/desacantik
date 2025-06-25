@@ -11,7 +11,7 @@
                     wire:click="$set('mode', 'table')"
                     class="transition-colors duration-200"
                 >
-                    Summary Table
+                    Tabel Upload
                 </x-filament::tabs.item>
 
                 <x-filament::tabs.item

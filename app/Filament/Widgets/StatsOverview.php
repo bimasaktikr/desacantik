@@ -21,7 +21,12 @@ class StatsOverview extends BaseWidget
         $successUploads = 0;
         $failedUploads = 0;
 
-        if ($user->roles->contains('name', 'Mahasiswa')) {
+        if ($user->roles->contains('name', 'super_admin')) {
+            // Super admin: show all
+            $totalUploads = AssignmentUpload::count();
+            $successUploads = AssignmentUpload::where('import_status', 'berhasil')->count();
+            $failedUploads = AssignmentUpload::where('import_status', 'gagal')->count();
+        } elseif ($user->roles->contains('name', 'Mahasiswa')) {
             $query->where('user_id', $user->id);
             $assignmentIds = Assignment::where('user_id', $user->id)
                 ->pluck('id')
