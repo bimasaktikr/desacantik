@@ -127,13 +127,13 @@ class UploadProgress extends Page implements HasTable, HasForms
                     ->label('Village')
                     ->sortable()
                     ->searchable(),
-                TextColumn::make('completed_uploads')
-                    ->label('Completed')
+                TextColumn::make('pending_uploads')
+                    ->label('Pending')
                     ->getStateUsing(function ($record) {
                         return AssignmentUpload::whereHas('assignment', function ($q) use ($record) {
                             $q->where('area_type', 'App\\Models\\Village')
                               ->where('area_id', $record->id);
-                        })->where('import_status', 'completed')->count();
+                        })->where('import_status', 'pending')->count();
                     }),
                 TextColumn::make('processing_uploads')
                     ->label('Processing')
@@ -143,13 +143,21 @@ class UploadProgress extends Page implements HasTable, HasForms
                               ->where('area_id', $record->id);
                         })->where('import_status', 'processing')->count();
                     }),
-                TextColumn::make('failed_uploads')
-                    ->label('Failed')
+                TextColumn::make('success_uploads')
+                    ->label('Berhasil')
                     ->getStateUsing(function ($record) {
                         return AssignmentUpload::whereHas('assignment', function ($q) use ($record) {
                             $q->where('area_type', 'App\\Models\\Village')
                               ->where('area_id', $record->id);
-                        })->where('import_status', 'failed')->count();
+                        })->where('import_status', 'berhasil')->count();
+                    }),
+                TextColumn::make('failed_uploads')
+                    ->label('Gagal')
+                    ->getStateUsing(function ($record) {
+                        return AssignmentUpload::whereHas('assignment', function ($q) use ($record) {
+                            $q->where('area_type', 'App\\Models\\Village')
+                              ->where('area_id', $record->id);
+                        })->where('import_status', 'gagal')->count();
                     }),
                 TextColumn::make('total_uploads')
                     ->label('Total Uploads')
