@@ -52,7 +52,7 @@ class AssignmentResource extends Resource
                 Tables\Columns\TextColumn::make('area_id')
                     ->label('Area ID')
                     ->sortable(),
-                Tables\Columns\TextColumn::make('area_name')
+                Tables\Columns\TextColumn::make('area.name')
                     ->label('Area Name')
                     ->getStateUsing(function ($record) {
                         return $record->area?->name ?? '-';
