@@ -108,9 +108,25 @@ class UploadProgress extends Page implements HasTable, HasForms
 
     public function table(Table $table): Table
     {
+        $user = Auth::user();
+        $query = AssignmentUpload::query();
+
+        if (!$user->roles->contains('name', 'super_admin')) {
+            // Get assigned village IDs for the user
+            $assignedVillageIds = Assignment::where('user_id', $user->id)
+                ->where('area_type', 'App\\Models\\Village')
+                ->pluck('area_id')
+                ->toArray();
+            // Only show uploads where the assignment's area is a village assigned to the user
+            $query->whereHas('assignment', function ($q) use ($assignedVillageIds) {
+                $q->where('area_type', 'App\\Models\\Village')
+                  ->whereIn('area_id', $assignedVillageIds);
+            });
+        }
+
         return $table
             ->query(
-                AssignmentUpload::query()
+                $query
                     ->when($this->districtId, function ($query) {
                         $query->whereHas('assignment', function ($q) {
                             $q->whereHasMorph('area', [Village::class], function ($q) {
