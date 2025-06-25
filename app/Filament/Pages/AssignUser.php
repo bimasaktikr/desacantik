@@ -29,11 +29,12 @@ use Illuminate\Contracts\View\View;
 
 class AssignUser extends Page implements HasForms, HasTable
 {
-    protected static ?string $navigationIcon = 'heroicon-o-document-text';
+    // protected static ?string $navigationIcon = 'heroicon-o-document-text';
+    protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
 
     protected static string $view = 'filament.pages.assign-user';
 
-    protected static ?string $navigationGroup = 'Pendataan';
+    protected static ?string $navigationGroup = 'Assignment Petugas';
 
     protected static ?string $title = 'Wilayah Tugas Petugas';
 

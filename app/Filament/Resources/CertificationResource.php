@@ -20,7 +20,7 @@ class CertificationResource extends Resource
     protected static ?string $model = Certification::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
-    protected static ?string $navigationGroup = 'Pendataan';
+    protected static ?string $navigationGroup = 'Master';
     protected static ?string $navigationLabel = 'Data Sertifikasi';
     protected static ?string $title = 'Data Sertifikasi';
     protected static ?string $slug = 'certifications';

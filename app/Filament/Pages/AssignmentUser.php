@@ -32,10 +32,9 @@ class AssignmentUser extends Page implements HasTable, HasForms
     use \Filament\Tables\Concerns\InteractsWithTable;
     use WithFileUploads;
 
-    protected static ?string $navigationIcon = 'heroicon-o-document-text';
-
+    // protected static ?string $navigationIcon = 'heroicon-o-document-text';
+    protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
     protected static string $view = 'filament.pages.assignment-user';
-
     protected static ?string $navigationGroup = 'Pendataan';
     protected static ?string $title = 'Assignment Petugas';
     protected static ?string $navigationLabel = 'Unggah Data Usaha';
@@ -169,6 +168,12 @@ class AssignmentUser extends Page implements HasTable, HasForms
 
     protected function getTableQuery()
     {
+        $user = Auth::user();
+        if ($user->roles->contains('name', 'super_admin')) {
+            // Super admin: show all assignment uploads
+            return \App\Models\AssignmentUpload::query();
+        }
+        // For other users, use the default or existing filtering logic
         return AssignmentUpload::query()
             ->where('user_id', Auth::id())
             ->with(['assignment.area'])

@@ -97,17 +97,13 @@ class AdminPanelProvider extends PanelProvider
             )
             ->databaseNotifications()
             ->navigationGroups([
-                NavigationGroup::make('administrasi')
-                    ->label('Administrasi Wilayah')
-                    ->icon('heroicon-o-academic-cap')
+                NavigationGroup::make('Pendataan')
+                    ->label('Pendataan')
+                    ->icon('heroicon-o-pencil-square')
                     ->collapsed(),
                 NavigationGroup::make('Monitoring')
                     ->label('Monitoring')
                     ->icon('heroicon-o-presentation-chart-line')
-                    ->collapsed(),
-                NavigationGroup::make('Pendataan')
-                    ->label('Pendataan')
-                    ->icon('heroicon-o-pencil-square')
                     ->collapsed(),
                 NavigationGroup::make('Data Usaha')
                     ->label('Data Usaha')
@@ -116,6 +112,14 @@ class AdminPanelProvider extends PanelProvider
                 NavigationGroup::make('peta')
                     ->label('Peta Digital')
                     ->icon('heroicon-o-map')
+                    ->collapsed(),
+                NavigationGroup::make('assignment')
+                    ->label('Assignment Petugas')
+                    ->icon('heroicon-o-bars-4')
+                    ->collapsed(),
+                NavigationGroup::make('administrasi')
+                    ->label('Administrasi Wilayah')
+                    ->icon('heroicon-o-academic-cap')
                     ->collapsed(),
                 NavigationGroup::make('master')
                     ->label('Master')
