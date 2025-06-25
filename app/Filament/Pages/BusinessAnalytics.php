@@ -39,7 +39,7 @@ class BusinessAnalytics extends Page implements HasForms
     public ?string $userId = null;
 
     // Determine if the navbar should be registered for this page
-    public function shouldRegisterNavigation(): bool
+    public static function shouldRegisterNavigation(): bool
     {
         // Only show in navigation for super_admin and Employee roles
         $user = Auth::user();
