@@ -150,8 +150,8 @@ class BusinessesImport implements ToCollection, WithHeadingRow, WithStartRow, Wi
                     'owner_gender' => $row['jenis_kelamin'] ?? null,
                     'owner_age' => is_numeric($row['usia']) ? (int)$row['usia'] : null,
                     'online_status' => $row['apakah_memiliki_online'] ?? 'Tidak',
-                    'pembinaan' => $row['apakah_pemilik_mau_mengikuti_pembinaan'] ?? 'Tidak',
-                    'pertokoan' => strtolower($row['apakah_pertokoan'] ?? 'tidak'),
+                    'pembinaan' => $row['apakah_pemilik_mau_mengikuti_pembinaan'] ?? null,
+                    'pertokoan' => strtolower($row['apakah_pertokoan'] ?? null ),
                     'catatan' => $row['catatan_lantaibloksektor'] ?? $row['catatan_lantai_blok_sektor'] ?? null,
                     'user_id' => $this->upload?->user_id,
 
