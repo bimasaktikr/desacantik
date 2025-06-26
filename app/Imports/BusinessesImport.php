@@ -124,6 +124,16 @@ class BusinessesImport implements ToCollection, WithHeadingRow, WithStartRow, Wi
         foreach ($rows as $index => $row) {
             $rowNumber = $index + 2; // Assuming start row is 2
             try {
+                // Convert '-' in jenis_kelamin, apakah_memiliki_online, and apakah_pemilik_mau_mengikuti_pembinaan to null
+                if (isset($row['jenis_kelamin']) && trim($row['jenis_kelamin']) === '-') {
+                    $row['jenis_kelamin'] = null;
+                }
+                if (isset($row['apakah_memiliki_online']) && trim($row['apakah_memiliki_online']) === '-') {
+                    $row['apakah_memiliki_online'] = null;
+                }
+                if (isset($row['apakah_pemilik_mau_mengikuti_pembinaan']) && trim($row['apakah_pemilik_mau_mengikuti_pembinaan']) === '-') {
+                    $row['apakah_pemilik_mau_mengikuti_pembinaan'] = null;
+                }
                 // Convert numeric fields to appropriate types
                 $data = [
                     // Business Data

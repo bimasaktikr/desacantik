@@ -25,6 +25,10 @@ use Illuminate\Support\Facades\Storage;
 use App\Imports\BusinessesImport;
 use Illuminate\Support\Facades\Log;
 use Maatwebsite\Excel\Facades\Excel;
+use Filament\Tables\Actions\ViewAction;
+use Filament\Infolists\Components\TextEntry;
+use Filament\Infolists\Components\Grid as InfolistGrid;
+use Filament\Infolists\Components\Section as InfolistSection;
 
 class AssignmentUser extends Page implements HasTable, HasForms
 {
@@ -213,14 +217,38 @@ class AssignmentUser extends Page implements HasTable, HasForms
                 ->label('Gagal')
                 ->numeric(),
             TextColumn::make('error_message')
-                ->label('Pesan Error')
                 ->wrap()
-                ->limit(100),
+                ->limit(100)
+                ->label('Pesan Error'),
+
         ];
     }
 
     public function refreshTable(): void
     {
         $this->resetTable();
+    }
+
+    protected function getTableActions(): array
+    {
+        return [
+            ViewAction::make()
+                ->modalHeading('Detail Assignment User')
+                ->modalSubmitAction(false)
+                ->modalCancelActionLabel('Close')
+                ->infolist([
+                    InfolistGrid::make(2)
+                        ->schema([
+                            TextEntry::make('id')->label('ID'),
+                            TextEntry::make('user.name')->label('User'),
+
+                        ]),
+                    InfolistSection::make('Error Details')
+                        ->collapsible()
+                        ->schema([
+                            TextEntry::make('error_message')->label('Pesan Error'),
+                        ]),
+                ]),
+        ];
     }
 }
