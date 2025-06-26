@@ -39,9 +39,13 @@ class UpdateBusiness extends Page implements HasTable
         $user = Auth::user();
         $query = Business::query();
 
-        // Mahasiswa only see businesses they uploaded
-        if ($user->roles->contains('name', 'Mahasiswa')) {
-            $query->where('user_id', $user->id);
+        // Both Employee and Mahasiswa: show all businesses in villages assigned to them
+        if ($user->roles->contains('name', 'Employee') || $user->roles->contains('name', 'Mahasiswa')) {
+            $assignedVillageIds = \App\Models\Assignment::where('user_id', $user->id)
+                ->where('area_type', 'App\\Models\\Village')
+                ->pluck('area_id')
+                ->toArray();
+            $query->whereIn('village_id', $assignedVillageIds);
         }
         // Other roles see all businesses
 
