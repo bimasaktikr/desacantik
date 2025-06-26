@@ -14,6 +14,11 @@ use Filament\Forms\Components\Select;
 use Filament\Support\Enums\FontWeight;
 use Filament\Tables\Columns\Layout\Split;
 use Filament\Tables\Columns\Layout\Stack;
+use Filament\Forms\Components\Toggle;
+use Filament\Tables\Actions\Action;
+use Filament\Infolists\Components\TextEntry;
+use Filament\Infolists\Components\Grid as InfolistGrid;
+use Filament\Forms\Components\Section;
 
 class UpdateBusiness extends Page implements HasTable
 {
@@ -126,6 +131,38 @@ class UpdateBusiness extends Page implements HasTable
                             ->getOptionLabelFromRecordUsing(fn ($record) => $record->code . ' - ' . $record->description)
                             ->required(),
                     ]),
+                Action::make('flag')
+                    ->label('Flag Fields')
+                    ->icon('heroicon-o-flag')
+                    ->color('warning')
+                    ->form([
+                        Section::make('Business Name')
+                            ->description(fn($record) => $record->name)
+                            ->aside()
+                            ->schema([
+                                Toggle::make('name_error')->label('Flag for review'),
+                            ]),
+                        Section::make('Description')
+                            ->description(fn($record) => $record->description)
+                            ->aside()
+                            ->schema([
+                                Toggle::make('description_error')->label('Flag for review'),
+                            ]),
+                        Section::make('Address')
+                            ->description(fn($record) => $record->address)
+                            ->aside()
+                            ->schema([
+                                Toggle::make('address_error')->label('Flag for review'),
+                            ]),
+                        Section::make('Business Category')
+                            ->description(fn($record) => optional($record->businessCategory)->code . ' - ' . optional($record->businessCategory)->description)
+                            ->aside()
+                            ->schema([
+                                Toggle::make('business_category_id_error')->label('Flag for review'),
+                            ]),
+                    ])
+                    ->modalWidth('2xl')
+                    ->visible(fn () => \Illuminate\Support\Facades\Auth::user()->roles->contains('name', 'Employee')),
             ])
             ->striped();
     }
