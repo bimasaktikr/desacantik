@@ -26,6 +26,7 @@ use App\Models\Sls;
 use App\Models\BusinessCategory;
 use Illuminate\Support\Facades\Log;
 use App\Models\District;
+use Filament\Tables\Actions\DeleteAction;
 
 class UpdateBusiness extends Page implements HasTable
 {
@@ -77,10 +78,7 @@ class UpdateBusiness extends Page implements HasTable
                             ->searchable()
                             ->sortable()
                             ->formatStateUsing(function ($state, $record) {
-                                $flag = $record->name_error
-                                    ? '<span style="color: #e3342f; vertical-align: middle;" title="Flagged for review"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="inline w-4 h-4"><path stroke-linecap="round" stroke-linejoin="round" d="M6 3v18m0 0l6-6m-6 6l6-6m0 0l6 6m-6-6l6-6" /></svg></span> '
-                                    : '';
-                                return $flag . e($state);
+                                return ($record->name_error ? '🚩 ' : '') . e($state);
                             })
                             ->html(),
                         TextColumn::make('description')
@@ -90,10 +88,7 @@ class UpdateBusiness extends Page implements HasTable
                             ->wrap()
                             ->limit(50)
                             ->formatStateUsing(function ($state, $record) {
-                                $flag = $record->description_error
-                                    ? '<span style="color: #e3342f; vertical-align: middle;" title="Flagged for review"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="inline w-4 h-4"><path stroke-linecap="round" stroke-linejoin="round" d="M6 3v18m0 0l6-6m-6 6l6-6m0 0l6 6m-6-6l6-6" /></svg></span> '
-                                    : '';
-                                return $flag . e($state);
+                                return ($record->description_error ? '🚩 ' : '') . e($state);
                             })
                             ->html(),
                         TextColumn::make('address')
@@ -101,10 +96,7 @@ class UpdateBusiness extends Page implements HasTable
                             ->color('gray')
                             ->size('sm')
                             ->formatStateUsing(function ($state, $record) {
-                                $flag = $record->address_error
-                                    ? '<span style="color: #e3342f; vertical-align: middle;" title="Flagged for review"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="inline w-4 h-4"><path stroke-linecap="round" stroke-linejoin="round" d="M6 3v18m0 0l6-6m-6 6l6-6m0 0l6 6m-6-6l6-6" /></svg></span> '
-                                    : '';
-                                return $flag . e($state);
+                                return ($record->address_error ? '🚩 ' : '') . e($state);
                             })
                             ->html(),
                     ]),
@@ -119,11 +111,8 @@ class UpdateBusiness extends Page implements HasTable
                         TextColumn::make('business_category')
                             ->label('Category')
                             ->getStateUsing(function ($record) {
-                                $flag = $record->business_category_id_error
-                                    ? '<span style="color: #e3342f; vertical-align: middle;" title="Flagged for review"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="inline w-4 h-4"><path stroke-linecap="round" stroke-linejoin="round" d="M6 3v18m0 0l6-6m-6 6l6-6m0 0l6 6m-6-6l6-6" /></svg></span> '
-                                    : '';
                                 $cat = optional($record->businessCategory)->code . ' - ' . optional($record->businessCategory)->description;
-                                return $flag . e($cat);
+                                return ($record->business_category_id_error ? '🚩 ' : '') . e($cat);
                             })
                             ->html(),
                     ]),
@@ -140,7 +129,11 @@ class UpdateBusiness extends Page implements HasTable
                             ->color('gray')
                             ->badge()
                             ->size('sm')
-                            ->limit(30),
+                            ->limit(30)
+                            ->formatStateUsing(function ($state, $record) {
+                                return ($record->catatan_error ? '🚩 ' : '') . e($state);
+                            })
+                            ->html(),
                         TextColumn::make('pertokoan')
                             ->label('Pertokoan')
                             ->badge()
@@ -200,66 +193,54 @@ class UpdateBusiness extends Page implements HasTable
                                         TextInput::make('name')
                                             ->required()
                                             ->maxLength(255)
-                                            ->label('Business Name'),
+                                            ->label(fn($record) => ($record->name_error ? '🚩 ' : '') . 'Business Name'),
                                         TextInput::make('description')
                                             ->required()
                                             ->maxLength(255)
-                                            ->label('Description'),
+                                            ->label(fn($record) => ($record->description_error ? '🚩 ' : '') . 'Description'),
                                         TextInput::make('address')
                                             ->required()
                                             ->maxLength(255)
-                                            ->label('Address'),
+                                            ->label(fn($record) => ($record->address_error ? '🚩 ' : '') . 'Address'),
                                         Select::make('status_bangunan')
-                                            ->label('Building Status')
+                                            ->label(fn($record) => ($record->status_bangunan_error ? '🚩 ' : '') . 'Building Status')
                                             ->options([
                                                 'Tetap' => 'Tetap',
                                                 'Tidak Tetap' => 'Tidak Tetap',
                                             ])
                                             ->required(),
                                         Select::make('business_category_id')
-                                            ->label('Category')
+                                            ->label(fn($record) => ($record->business_category_id_error ? '🚩 ' : '') . 'Category')
                                             ->relationship('businessCategory', 'code')
                                             ->getOptionLabelFromRecordUsing(fn ($record) => $record->code . ' - ' . $record->description)
                                             ->required(),
                                         Select::make('sls_id')
-                                            ->label('SLS')
+                                            ->label(fn($record) => ($record->sls_id_error ? '🚩 ' : '') . 'SLS')
                                             ->options(function ($record) {
                                                 if (!$record || !$record->village_id) {
                                                     return [];
                                                 }
-
                                                 $slsOptions = \App\Models\Sls::where('village_id', $record->village_id)
                                                     ->get()
                                                     ->mapWithKeys(function ($sls) {
                                                         return [$sls->id => $sls->name];
                                                     })
                                                     ->toArray();
-
-                                                // Sort by RW first, then by RT within each RW
                                                 uasort($slsOptions, function ($a, $b) {
-                                                    // Extract RW and RT numbers from SLS names
                                                     preg_match('/RT\s*(\d+)\s*RW\s*(\d+)/i', $a, $matchesA);
                                                     preg_match('/RT\s*(\d+)\s*RW\s*(\d+)/i', $b, $matchesB);
-
                                                     if (count($matchesA) >= 3 && count($matchesB) >= 3) {
                                                         $rwA = (int) $matchesA[2];
                                                         $rtA = (int) $matchesA[1];
                                                         $rwB = (int) $matchesB[2];
                                                         $rtB = (int) $matchesB[1];
-
-                                                        // Sort by RW first
                                                         if ($rwA !== $rwB) {
                                                             return $rwA <=> $rwB;
                                                         }
-
-                                                        // If RW is same, sort by RT
                                                         return $rtA <=> $rtB;
                                                     }
-
-                                                    // Fallback to string comparison if pattern doesn't match
                                                     return strcmp($a, $b);
                                                 });
-
                                                 return $slsOptions;
                                             })
                                             ->searchable()
@@ -267,12 +248,12 @@ class UpdateBusiness extends Page implements HasTable
                                         TextInput::make('catatan')
                                             ->required()
                                             ->maxLength(255)
-                                            ->label('Catatan'),
+                                            ->label(fn($record) => ($record->catatan_error ? '🚩 ' : '') . 'Catatan'),
                                     ]),
                                 \Filament\Forms\Components\Tabs\Tab::make('Additional Information')
                                     ->schema([
                                         Select::make('pertokoan')
-                                            ->label('Apakah Termasuk Pertokoan?')
+                                            ->label(fn($record) => ($record->pertokoan_error ? '🚩 ' : '') . 'Apakah Termasuk Pertokoan?')
                                             ->options([
                                                 '-' => '-',
                                                 'Ya' => 'Ya',
@@ -280,11 +261,11 @@ class UpdateBusiness extends Page implements HasTable
                                             ])
                                             ->nullable(),
                                         TextInput::make('owner_name')
-                                            ->label('Nama Pemilik')
+                                            ->label(fn($record) => ($record->owner_name_error ? '🚩 ' : '') . 'Nama Pemilik')
                                             ->maxLength(255)
                                             ->nullable(),
                                         Select::make('owner_gender')
-                                            ->label('Gender')
+                                            ->label(fn($record) => ($record->owner_gender_error ? '🚩 ' : '') . 'Gender')
                                             ->options([
                                                 '-' => '-',
                                                 'Laki-Laki' => 'Laki-Laki',
@@ -292,19 +273,19 @@ class UpdateBusiness extends Page implements HasTable
                                             ])
                                             ->nullable(),
                                         TextInput::make('owner_age')
-                                            ->label('Age')
+                                            ->label(fn($record) => ($record->owner_age_error ? '🚩 ' : '') . 'Age')
                                             ->nullable(),
                                         TextInput::make('phone')
-                                            ->label('Nomor Handphone')
+                                            ->label(fn($record) => ($record->phone_error ? '🚩 ' : '') . 'Nomor Handphone')
                                             ->maxLength(255)
                                             ->nullable(),
                                         TextInput::make('email')
-                                            ->label('Email')
+                                            ->label(fn($record) => ($record->email_error ? '🚩 ' : '') . 'Email')
                                             ->email()
                                             ->maxLength(255)
                                             ->nullable(),
                                         Select::make('online_status')
-                                            ->label('Apakah Memiliki Toko Online?')
+                                            ->label(fn($record) => ($record->online_status_error ? '🚩 ' : '') . 'Apakah Memiliki Toko Online?')
                                             ->options([
                                                 '-' => '-',
                                                 'Ya' => 'Ya',
@@ -312,7 +293,7 @@ class UpdateBusiness extends Page implements HasTable
                                             ])
                                             ->nullable(),
                                         Select::make('pembinaan')
-                                            ->label('Apakah mau mengikuti Pembinaan')
+                                            ->label(fn($record) => ($record->pembinaan_error ? '🚩 ' : '') . 'Apakah mau mengikuti Pembinaan')
                                             ->options([
                                                 '-' => '-',
                                                 'Ya' => 'Ya',
@@ -334,39 +315,185 @@ class UpdateBusiness extends Page implements HasTable
                         unset($data['certifications']);
                         $record->update($data);
                         $record->certifications()->sync($certifications);
+                    })
+                    ->visible(function ($record) {
+                        $user = \Illuminate\Support\Facades\Auth::user();
+                        if ($record->user_id === $user->id) {
+                            return true;
+                        }
+                        if ($user->roles->contains('name', 'Employee')) {
+                            $assignedVillageIds = \App\Models\Assignment::where('user_id', $user->id)
+                                ->where('area_type', 'App\\Models\\Village')
+                                ->pluck('area_id')
+                                ->toArray();
+                            return in_array($record->village_id, $assignedVillageIds);
+                        }
+                        return false;
+                    }),
+                DeleteAction::make()
+                    ->requiresConfirmation()
+                    ->modalHeading('Are you sure you want to delete this business?')
+                    ->modalDescription('This action cannot be undone.')
+                    ->visible(function ($record) {
+                        $user = \Illuminate\Support\Facades\Auth::user();
+                        if ($record->user_id === $user->id) {
+                            return true;
+                        }
+                        if ($user->roles->contains('name', 'Employee')) {
+                            $assignedVillageIds = \App\Models\Assignment::where('user_id', $user->id)
+                                ->where('area_type', 'App\\Models\\Village')
+                                ->pluck('area_id')
+                                ->toArray();
+                            return in_array($record->village_id, $assignedVillageIds);
+                        }
+                        return false;
                     }),
                 Action::make('flag')
                     ->label('Flag Fields')
                     ->icon('heroicon-o-flag')
                     ->color('warning')
                     ->form([
-                        Section::make('Business Name')
-                            ->description(fn($record) => $record->name)
-                            ->aside()
-                            ->schema([
-                                Toggle::make('name_error')->label('Flag for review'),
-                            ]),
-                        Section::make('Description')
-                            ->description(fn($record) => $record->description)
-                            ->aside()
-                            ->schema([
-                                Toggle::make('description_error')->label('Flag for review'),
-                            ]),
-                        Section::make('Address')
-                            ->description(fn($record) => $record->address)
-                            ->aside()
-                            ->schema([
-                                Toggle::make('address_error')->label('Flag for review'),
-                            ]),
-                        Section::make('Business Category')
-                            ->description(fn($record) => optional($record->businessCategory)->code . ' - ' . optional($record->businessCategory)->description)
-                            ->aside()
-                            ->schema([
-                                Toggle::make('business_category_id_error')->label('Flag for review'),
+                        \Filament\Forms\Components\Tabs::make('Flag Fields')
+                            ->tabs([
+                                \Filament\Forms\Components\Tabs\Tab::make('Basic Information')
+                                    ->schema([
+                                        Section::make('Business Name')
+                                            ->description(fn($record) => $record->name)
+                                            ->aside()
+                                            ->schema([
+                                                Toggle::make('name_error')->label('Flag Business Name')->default(fn($record) => (bool) $record->name_error),
+                                            ]),
+                                        Section::make('Description')
+                                            ->description(fn($record) => $record->description)
+                                            ->aside()
+                                            ->schema([
+                                                Toggle::make('description_error')->label('Flag Description')->default(fn($record) => (bool) $record->description_error),
+                                            ]),
+                                        Section::make('Address')
+                                            ->description(fn($record) => $record->address)
+                                            ->aside()
+                                            ->schema([
+                                                Toggle::make('address_error')->label('Flag Address')->default(fn($record) => (bool) $record->address_error),
+                                            ]),
+                                        Section::make('Village')
+                                            ->description(fn($record) => optional($record->village)->name)
+                                            ->aside()
+                                            ->schema([
+                                                Toggle::make('village_id_error')->label('Flag Village')->default(fn($record) => (bool) $record->village_id_error),
+                                            ]),
+                                        Section::make('SLS')
+                                            ->description(fn($record) => optional($record->sls)->name)
+                                            ->aside()
+                                            ->schema([
+                                                Toggle::make('sls_id_error')->label('Flag SLS')->default(fn($record) => (bool) $record->sls_id_error),
+                                            ]),
+                                        Section::make('Building Status')
+                                            ->description(fn($record) => $record->status_bangunan)
+                                            ->aside()
+                                            ->schema([
+                                                Toggle::make('status_bangunan_error')->label('Flag Building Status')->default(fn($record) => (bool) $record->status_bangunan_error),
+                                            ]),
+                                        Section::make('Category')
+                                            ->description(fn($record) => optional($record->businessCategory)->code . ' - ' . optional($record->businessCategory)->description)
+                                            ->aside()
+                                            ->schema([
+                                                Toggle::make('business_category_id_error')->label('Flag Category')->default(fn($record) => (bool) $record->business_category_id_error),
+                                            ]),
+                                        Section::make('Catatan')
+                                            ->description(fn($record) => $record->catatan)
+                                            ->aside()
+                                            ->schema([
+                                                Toggle::make('catatan_error')->label('Flag Catatan')->default(fn($record) => (bool) $record->catatan_error),
+                                            ]),
+                                    ]),
+                                \Filament\Forms\Components\Tabs\Tab::make('Additional Information')
+                                    ->schema([
+                                        Section::make('Pertokoan')
+                                            ->description(fn($record) => $record->pertokoan)
+                                            ->aside()
+                                            ->schema([
+                                                Toggle::make('pertokoan_error')->label('Flag Pertokoan')->default(fn($record) => (bool) $record->pertokoan_error),
+                                            ]),
+                                        Section::make('Owner Name')
+                                            ->description(fn($record) => $record->owner_name)
+                                            ->aside()
+                                            ->schema([
+                                                Toggle::make('owner_name_error')->label('Flag Owner Name')->default(fn($record) => (bool) $record->owner_name_error),
+                                            ]),
+                                        Section::make('Owner Gender')
+                                            ->description(fn($record) => $record->owner_gender)
+                                            ->aside()
+                                            ->schema([
+                                                Toggle::make('owner_gender_error')->label('Flag Owner Gender')->default(fn($record) => (bool) $record->owner_gender_error),
+                                            ]),
+                                        Section::make('Owner Age')
+                                            ->description(fn($record) => $record->owner_age)
+                                            ->aside()
+                                            ->schema([
+                                                Toggle::make('owner_age_error')->label('Flag Owner Age')->default(fn($record) => (bool) $record->owner_age_error),
+                                            ]),
+                                        Section::make('Phone')
+                                            ->description(fn($record) => $record->phone)
+                                            ->aside()
+                                            ->schema([
+                                                Toggle::make('phone_error')->label('Flag Phone')->default(fn($record) => (bool) $record->phone_error),
+                                            ]),
+                                        Section::make('Email')
+                                            ->description(fn($record) => $record->email)
+                                            ->aside()
+                                            ->schema([
+                                                Toggle::make('email_error')->label('Flag Email')->default(fn($record) => (bool) $record->email_error),
+                                            ]),
+                                        Section::make('Online Status')
+                                            ->description(fn($record) => $record->online_status)
+                                            ->aside()
+                                            ->schema([
+                                                Toggle::make('online_status_error')->label('Flag Online Status')->default(fn($record) => (bool) $record->online_status_error),
+                                            ]),
+                                        Section::make('Pembinaan')
+                                            ->description(fn($record) => $record->pembinaan)
+                                            ->aside()
+                                            ->schema([
+                                                Toggle::make('pembinaan_error')->label('Flag Pembinaan')->default(fn($record) => (bool) $record->pembinaan_error),
+                                            ]),
+                                        Section::make('User')
+                                            ->description(fn($record) => optional($record->user)->name)
+                                            ->aside()
+                                            ->schema([
+                                                Toggle::make('user_id_error')->label('Flag User')->default(fn($record) => (bool) $record->user_id_error),
+                                            ]),
+                                    ]),
                             ]),
                     ])
                     ->modalWidth('2xl')
-                    ->visible(fn () => \Illuminate\Support\Facades\Auth::user()->roles->contains('name', 'Employee')),
+                    ->visible(fn () => \Illuminate\Support\Facades\Auth::user()->roles->contains('name', 'Employee'))
+                    ->action(function (array $data, $record) {
+                        $fields = [
+                            'name_error',
+                            'description_error',
+                            'address_error',
+                            'village_id_error',
+                            'sls_id_error',
+                            'status_bangunan_error',
+                            'business_category_id_error',
+                            'catatan_error',
+                            'pertokoan_error',
+                            'owner_name_error',
+                            'owner_gender_error',
+                            'owner_age_error',
+                            'phone_error',
+                            'email_error',
+                            'online_status_error',
+                            'pembinaan_error',
+                            'user_id_error',
+                        ];
+                        foreach ($fields as $field) {
+                            if (!array_key_exists($field, $data)) {
+                                $data[$field] = false;
+                            }
+                        }
+                        $record->update($data);
+                    }),
             ])
             ->striped()
             ->filters([

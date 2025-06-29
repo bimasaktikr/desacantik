@@ -49,6 +49,24 @@ class Business extends Model
         'vdop',
         'satellites_in_view',
         'satellites_in_use',
+        // All error flag fields
+        'name_error',
+        'description_error',
+        'address_error',
+        'village_id_error',
+        'sls_id_error',
+        'status_bangunan_error',
+        'business_category_id_error',
+        'phone_error',
+        'email_error',
+        'owner_name_error',
+        'owner_gender_error',
+        'owner_age_error',
+        'online_status_error',
+        'pembinaan_error',
+        'catatan_error',
+        'user_id_error',
+        'final_flag',
     ];
     // add guaded
     protected $guarded = ['id'];
