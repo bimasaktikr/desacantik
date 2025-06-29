@@ -68,6 +68,11 @@ class UpdateBusiness extends Page implements HasTable
         }
         // Other roles see all businesses
 
+        Log::info('User roles', [
+            'user_id' => Auth::id(),
+            'roles' => Auth::user()?->roles?->pluck('name')->toArray(),
+        ]);
+
         return $table
             ->query($query)
             ->columns([
