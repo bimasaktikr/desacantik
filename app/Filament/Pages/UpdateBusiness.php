@@ -324,7 +324,7 @@ class UpdateBusiness extends Page implements HasTable
                     })
                     ->visible(function ($record) {
                         $user = \Illuminate\Support\Facades\Auth::user();
-                        if ($record->user_id === $user->id) {
+                        if ($record->user_id == $user->id) {
                             return true;
                         }
                         if ($user->roles->contains('name', 'Employee')) {
