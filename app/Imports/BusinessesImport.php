@@ -124,16 +124,12 @@ class BusinessesImport implements ToCollection, WithHeadingRow, WithStartRow, Wi
         foreach ($rows as $index => $row) {
             $rowNumber = $index + 2; // Assuming start row is 2
             try {
-                // Convert '-' in jenis_kelamin, apakah_memiliki_online, and apakah_pemilik_mau_mengikuti_pembinaan to null
-                if (isset($row['jenis_kelamin']) && trim($row['jenis_kelamin']) === '-') {
-                    $row['jenis_kelamin'] = null;
-                }
-                if (isset($row['apakah_memiliki_online']) && trim($row['apakah_memiliki_online']) === '-') {
-                    $row['apakah_memiliki_online'] = null;
-                }
-                if (isset($row['apakah_pemilik_mau_mengikuti_pembinaan']) && trim($row['apakah_pemilik_mau_mengikuti_pembinaan']) === '-') {
-                    $row['apakah_pemilik_mau_mengikuti_pembinaan'] = null;
-                }
+                // Convert empty/null values to '-' for enum fields
+                $row['jenis_kelamin'] = empty(trim($row['jenis_kelamin'] ?? '')) ? '-' : trim($row['jenis_kelamin']);
+                $row['apakah_memiliki_online'] = empty(trim($row['apakah_memiliki_online'] ?? '')) ? '-' : trim($row['apakah_memiliki_online']);
+                $row['apakah_pemilik_mau_mengikuti_pembinaan'] = empty(trim($row['apakah_pemilik_mau_mengikuti_pembinaan'] ?? '')) ? '-' : trim($row['apakah_pemilik_mau_mengikuti_pembinaan']);
+                $row['apakah_pertokoan'] = empty(trim($row['apakah_pertokoan'] ?? '')) ? '-' : trim($row['apakah_pertokoan']);
+
                 // Convert numeric fields to appropriate types
                 $data = [
                     // Business Data
@@ -147,11 +143,11 @@ class BusinessesImport implements ToCollection, WithHeadingRow, WithStartRow, Wi
                     'phone' => $row['no_handphone'] ?? null,
                     'email' => $row['email'] ?? null,
                     'owner_name' => $row['nama_pemilik_usaha'] ?? null,
-                    'owner_gender' => $row['jenis_kelamin'] ?? null,
+                    'owner_gender' => $row['jenis_kelamin'],
                     'owner_age' => is_numeric($row['usia']) ? (int)$row['usia'] : null,
-                    'online_status' => $row['apakah_memiliki_online'] ?? null ,
-                    'pembinaan' => $row['apakah_pemilik_mau_mengikuti_pembinaan'] ?? null,
-                    'pertokoan' => strtolower($row['apakah_pertokoan'] ?? null ),
+                    'online_status' => $row['apakah_memiliki_online'],
+                    'pembinaan' => $row['apakah_pemilik_mau_mengikuti_pembinaan'],
+                    'pertokoan' => $row['apakah_pertokoan'] ?? null,
                     'catatan' => $row['catatan_lantaibloksektor'] ?? $row['catatan_lantai_blok_sektor'] ?? null,
                     'user_id' => $this->upload?->user_id,
 

@@ -5,7 +5,7 @@ use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 // use Illuminate\Support\Facades\Schedule;
 use Illuminate\Console\Scheduling\Schedule;
-use App\Http\Middleware\CheckSiteActive;
+// use App\Http\Middleware\CheckSiteActive;
 
 
 
@@ -18,7 +18,7 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware) {
         $middleware->alias([
-            'check-site-status' => CheckSiteActive::class,
+            // 'check-site-active' => CheckSiteActive::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {

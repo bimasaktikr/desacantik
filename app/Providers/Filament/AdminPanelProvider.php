@@ -33,7 +33,7 @@ use Rupadana\ApiService\ApiServicePlugin;
 use Laravel\Socialite\Contracts\User as SocialiteUserContract;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Support\Facades\Schema;
-use App\Http\Middleware\CheckSiteActive;
+// use App\Http\Middleware\CheckSiteActive;
 
 
 class AdminPanelProvider extends PanelProvider
@@ -86,14 +86,12 @@ class AdminPanelProvider extends PanelProvider
                 SubstituteBindings::class,
                 DisableBladeIconComponents::class,
                 DispatchServingFilamentEvent::class,
+                // CheckSiteActive::class,
+                SetTheme::class,
             ])
             ->sidebarCollapsibleOnDesktop(true)
             ->authMiddleware([
                 Authenticate::class,
-            ])
-            ->middleware([
-                SetTheme::class,
-                CheckSiteActive::class,
             ])
             ->plugins(
                 $this->getPlugins()

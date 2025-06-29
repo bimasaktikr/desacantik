@@ -19,6 +19,12 @@ use Filament\Tables\Actions\Action;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Infolists\Components\Grid as InfolistGrid;
 use Filament\Forms\Components\Section;
+use Filament\Tables\Filters\Filter;
+use Filament\Tables\Filters\SelectFilter;
+use App\Models\Village;
+use App\Models\Sls;
+use App\Models\BusinessCategory;
+use Illuminate\Support\Facades\Log;
 
 class UpdateBusiness extends Page implements HasTable
 {
@@ -50,7 +56,12 @@ class UpdateBusiness extends Page implements HasTable
                 ->where('area_type', 'App\\Models\\Village')
                 ->pluck('area_id')
                 ->toArray();
-            $query->whereIn('village_id', $assignedVillageIds);
+
+            // If user has assignments, filter by them; otherwise show all businesses
+            if (!empty($assignedVillageIds)) {
+                $query->whereIn('village_id', $assignedVillageIds);
+            }
+            // If no assignments, show all businesses (for testing purposes)
         }
         // Other roles see all businesses
 
@@ -63,73 +74,265 @@ class UpdateBusiness extends Page implements HasTable
                             ->label('Business Name')
                             ->weight(FontWeight::Bold)
                             ->searchable()
-                            ->sortable(),
+                            ->sortable()
+                            ->formatStateUsing(function ($state, $record) {
+                                $flag = $record->name_error
+                                    ? '<span style="color: #e3342f; vertical-align: middle;" title="Flagged for review"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="inline w-4 h-4"><path stroke-linecap="round" stroke-linejoin="round" d="M6 3v18m0 0l6-6m-6 6l6-6m0 0l6 6m-6-6l6-6" /></svg></span> '
+                                    : '';
+                                return $flag . e($state);
+                            })
+                            ->html(),
                         TextColumn::make('description')
                             ->label('Description')
                             ->color('gray')
                             ->size('sm')
                             ->wrap()
-                            ->limit(50),
-                    ]),
-
-                    Stack::make([
+                            ->limit(50)
+                            ->formatStateUsing(function ($state, $record) {
+                                $flag = $record->description_error
+                                    ? '<span style="color: #e3342f; vertical-align: middle;" title="Flagged for review"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="inline w-4 h-4"><path stroke-linecap="round" stroke-linejoin="round" d="M6 3v18m0 0l6-6m-6 6l6-6m0 0l6 6m-6-6l6-6" /></svg></span> '
+                                    : '';
+                                return $flag . e($state);
+                            })
+                            ->html(),
                         TextColumn::make('address')
                             ->label('Address')
                             ->color('gray')
-                            ->size('sm'),
+                            ->size('sm')
+                            ->formatStateUsing(function ($state, $record) {
+                                $flag = $record->address_error
+                                    ? '<span style="color: #e3342f; vertical-align: middle;" title="Flagged for review"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="inline w-4 h-4"><path stroke-linecap="round" stroke-linejoin="round" d="M6 3v18m0 0l6-6m-6 6l6-6m0 0l6 6m-6-6l6-6" /></svg></span> '
+                                    : '';
+                                return $flag . e($state);
+                            })
+                            ->html(),
+                    ]),
+
+                    Stack::make([
                         TextColumn::make('village.name')
                             ->label('Village')
                             ->sortable(),
                         TextColumn::make('sls.name')
                             ->label('SLS')
                             ->sortable(),
+                        TextColumn::make('business_category')
+                            ->label('Category')
+                            ->getStateUsing(function ($record) {
+                                $flag = $record->business_category_id_error
+                                    ? '<span style="color: #e3342f; vertical-align: middle;" title="Flagged for review"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="inline w-4 h-4"><path stroke-linecap="round" stroke-linejoin="round" d="M6 3v18m0 0l6-6m-6 6l6-6m0 0l6 6m-6-6l6-6" /></svg></span> '
+                                    : '';
+                                $cat = optional($record->businessCategory)->code . ' - ' . optional($record->businessCategory)->description;
+                                return $flag . e($cat);
+                            })
+                            ->html(),
+                    ]),
 
+                    Stack::make([
+                        TextColumn::make('status_bangunan')
+                            ->label('Building Status')
+                            ->badge()
+                            ->color('warning')
+                            ->formatStateUsing(fn ($state) => $state === 'Tetap' ? 'Tetap (Permanent)' : 'Tidak Tetap (Temporary)')
+                            ->sortable(),
+                        TextColumn::make('pertokoan')
+                            ->label('Pertokoan')
+                            ->badge()
+                            ->color('success')
+                            ->formatStateUsing(fn ($state) => $state === 'Ya' ? 'Ya (Termasuk Pertokoan)' : ($state === 'Tidak' ? 'Tidak (Bukan Pertokoan)' : ($state === '-' ? '-' : '- (Not Specified)')))
+                            ->sortable(),
+                        TextColumn::make('online_status')
+                            ->label('Toko Online')
+                            ->badge()
+                            ->color('info')
+                            ->formatStateUsing(fn ($state) => $state === 'Ya' ? 'Ya (Memiliki Toko Online)' : ($state === 'Tidak' ? 'Tidak (Tidak Memiliki Toko Online)' : ($state === '-' ? '-' : '- (Not Specified)')))
+                            ->sortable(),
+                        TextColumn::make('pembinaan')
+                            ->label('Pembinaan')
+                            ->badge()
+                            ->color('warning')
+                            ->formatStateUsing(fn ($state) => $state === 'Ya' ? 'Ya (Mau Mengikuti Pembinaan)' : ($state === 'Tidak' ? 'Tidak (Tidak Mau Mengikuti Pembinaan)' : ($state === '-' ? '-' : '- (Not Specified)')))
+                            ->sortable(),
+                    ]),
+
+                    Stack::make([
+                        TextColumn::make('owner_name')
+                            ->label('Nama Pemilik')
+                            ->color('primary')
+                            ->sortable()
+                            ->searchable()
+                            ->formatStateUsing(fn ($state) => $state ?: '<span style="color: #888;">—</span>')
+                            ->html(),
+                        TextColumn::make('owner_gender')
+                            ->label('Jenis Kelamin')
+                            ->badge()
+                            ->color('gray')
+                            ->sortable()
+                            ->formatStateUsing(fn ($state) => $state ?: '<span style="color: #888;">—</span>')
+                            ->html(),
+                        TextColumn::make('owner_age')
+                            ->label('Usia')
+                            ->sortable()
+                            ->formatStateUsing(fn ($state) => $state ?: '<span style="color: #888;">—</span>')
+                            ->html(),
+                    ]),
+
+                    Stack::make([
+                        TextColumn::make('phone')
+                            ->label('Nomor Handphone')
+                            ->icon('heroicon-m-phone')
+                            ->sortable(),
+                        TextColumn::make('email')
+                            ->label('Email')
+                            ->icon('heroicon-m-envelope')
+                            ->sortable(),
+                        TextColumn::make('catatan')
+                            ->label('Catatan')
+                            ->color('gray')
+                            ->size('sm')
+                            ->limit(30),
                     ]),
                 ])->from('md'),
 
-                TextColumn::make('business_category')
-                    ->label('Category')
-                    ->badge()
-                    ->color('info')
-                    ->getStateUsing(function ($record) {
-                        return optional($record->businessCategory)->code . ' - ' . optional($record->businessCategory)->description;
-                    }),
-                TextColumn::make('status_bangunan')
-                    ->label('Building Status')
-                    ->badge()
-                    ->color('warning')
-                    ->sortable(),
-                TextColumn::make('owner_name')
-                    ->label('Owner Name')
-                    ->color('primary')
-                    ->sortable()
-                    ->searchable(),
-                TextColumn::make('phone')
-                    ->label('Phone')
-                    ->icon('heroicon-m-phone')
-                    ->sortable(),
-                TextColumn::make('email')
-                    ->label('Email')
-                    ->icon('heroicon-m-envelope')
-                    ->sortable(),
+
             ])
             ->actions([
                 EditAction::make()
                     ->form([
-                        TextInput::make('name')
-                            ->required()
-                            ->label('Business Name'),
-                        TextInput::make('description')
-                            ->required()
-                            ->label('Description'),
-                        TextInput::make('address')
-                            ->required()
-                            ->label('Address'),
-                        Select::make('business_category_id')
-                            ->label('Category')
-                            ->relationship('businessCategory', 'code')
-                            ->getOptionLabelFromRecordUsing(fn ($record) => $record->code . ' - ' . $record->description)
-                            ->required(),
+                        \Filament\Forms\Components\Tabs::make('Business Information')
+                            ->tabs([
+                                \Filament\Forms\Components\Tabs\Tab::make('Basic Information')
+                                    ->schema([
+                                        TextInput::make('name')
+                                            ->required()
+                                            ->maxLength(255)
+                                            ->label('Business Name'),
+                                        TextInput::make('description')
+                                            ->required()
+                                            ->maxLength(255)
+                                            ->label('Description'),
+                                        TextInput::make('address')
+                                            ->required()
+                                            ->maxLength(255)
+                                            ->label('Address'),
+                                        Select::make('status_bangunan')
+                                            ->label('Building Status')
+                                            ->options([
+                                                'Tetap' => 'Tetap',
+                                                'Tidak Tetap' => 'Tidak Tetap',
+                                            ])
+                                            ->required(),
+                                        Select::make('business_category_id')
+                                            ->label('Category')
+                                            ->relationship('businessCategory', 'code')
+                                            ->getOptionLabelFromRecordUsing(fn ($record) => $record->code . ' - ' . $record->description)
+                                            ->required(),
+                                        Select::make('sls_id')
+                                            ->label('SLS')
+                                            ->options(function ($record) {
+                                                if (!$record || !$record->village_id) {
+                                                    return [];
+                                                }
+
+                                                $slsOptions = \App\Models\Sls::where('village_id', $record->village_id)
+                                                    ->get()
+                                                    ->mapWithKeys(function ($sls) {
+                                                        return [$sls->id => $sls->name];
+                                                    })
+                                                    ->toArray();
+
+                                                // Sort by RW first, then by RT within each RW
+                                                uasort($slsOptions, function ($a, $b) {
+                                                    // Extract RW and RT numbers from SLS names
+                                                    preg_match('/RT\s*(\d+)\s*RW\s*(\d+)/i', $a, $matchesA);
+                                                    preg_match('/RT\s*(\d+)\s*RW\s*(\d+)/i', $b, $matchesB);
+
+                                                    if (count($matchesA) >= 3 && count($matchesB) >= 3) {
+                                                        $rwA = (int) $matchesA[2];
+                                                        $rtA = (int) $matchesA[1];
+                                                        $rwB = (int) $matchesB[2];
+                                                        $rtB = (int) $matchesB[1];
+
+                                                        // Sort by RW first
+                                                        if ($rwA !== $rwB) {
+                                                            return $rwA <=> $rwB;
+                                                        }
+
+                                                        // If RW is same, sort by RT
+                                                        return $rtA <=> $rtB;
+                                                    }
+
+                                                    // Fallback to string comparison if pattern doesn't match
+                                                    return strcmp($a, $b);
+                                                });
+
+                                                return $slsOptions;
+                                            })
+                                            ->searchable()
+                                            ->required(),
+                                        TextInput::make('catatan')
+                                            ->required()
+                                            ->maxLength(255)
+                                            ->label('Catatan'),
+                                    ]),
+                                \Filament\Forms\Components\Tabs\Tab::make('Additional Information')
+                                    ->schema([
+                                        Select::make('pertokoan')
+                                            ->label('Apakah Termasuk Pertokoan?')
+                                            ->options([
+                                                '-' => '-',
+                                                'Ya' => 'Ya',
+                                                'Tidak' => 'Tidak',
+                                            ])
+                                            ->nullable(),
+                                        TextInput::make('owner_name')
+                                            ->label('Nama Pemilik')
+                                            ->maxLength(255)
+                                            ->nullable(),
+                                        Select::make('owner_gender')
+                                            ->label('Gender')
+                                            ->options([
+                                                '-' => '-',
+                                                'Laki-Laki' => 'Laki-Laki',
+                                                'Perempuan' => 'Perempuan',
+                                            ])
+                                            ->nullable(),
+                                        TextInput::make('owner_age')
+                                            ->label('Age')
+                                            ->nullable(),
+                                        TextInput::make('phone')
+                                            ->label('Nomor Handphone')
+                                            ->maxLength(255)
+                                            ->nullable(),
+                                        TextInput::make('email')
+                                            ->label('Email')
+                                            ->email()
+                                            ->maxLength(255)
+                                            ->nullable(),
+                                        Select::make('online_status')
+                                            ->label('Apakah Memiliki Toko Online?')
+                                            ->options([
+                                                '-' => '-',
+                                                'Ya' => 'Ya',
+                                                'Tidak' => 'Tidak',
+                                            ])
+                                            ->nullable(),
+                                        Select::make('pembinaan')
+                                            ->label('Apakah mau mengikuti Pembinaan')
+                                            ->options([
+                                                '-' => '-',
+                                                'Ya' => 'Ya',
+                                                'Tidak' => 'Tidak',
+                                            ])
+                                            ->nullable(),
+                                        \Filament\Forms\Components\Select::make('certifications')
+                                            ->label('Kepemilikan Sertifikat')
+                                            ->relationship('certifications', 'name')
+                                            ->multiple()
+                                            ->preload()
+                                            ->searchable()
+                                            ->nullable(),
+                                    ]),
+                            ]),
                     ]),
                 Action::make('flag')
                     ->label('Flag Fields')
