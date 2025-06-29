@@ -24,6 +24,7 @@ class EditBusiness extends EditRecord
         ];
     }
 
+
     //customize redirect after create
     public function getRedirectUrl(): string
     {

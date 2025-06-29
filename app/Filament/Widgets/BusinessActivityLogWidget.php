@@ -16,6 +16,11 @@ class BusinessActivityLogWidget extends BaseWidget
 
     protected function getTableQuery(): Builder|Relation|null
     {
+        if (!$this->record || !$this->record->id) {
+            // Return an empty query if no business is loaded
+            return Activity::query()->whereRaw('1=0');
+        }
+
         return Activity::query()
             ->where('subject_type', Business::class)
             ->where('subject_id', $this->record->id)
