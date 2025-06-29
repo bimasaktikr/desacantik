@@ -3,10 +3,23 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Spatie\Activitylog\Traits\LogsActivity;
+use Spatie\Activitylog\LogOptions;
 
 class Business extends Model
 {
-    //
+    use LogsActivity;
+
+    // Log all attributes, but only when they change
+    protected static $logAttributes = ['*'];
+    protected static $logOnlyDirty = true;
+    protected static $logName = 'business';
+
+    // Optional: customize the description for each event
+    public function getDescriptionForEvent(string $eventName): string
+    {
+        return "Business was {$eventName}";
+    }
 
     // add fillable
     protected $fillable = [
@@ -98,5 +111,13 @@ class Business extends Model
     public function user()
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->logAll()
+            ->logOnlyDirty()
+            ->useLogName('business');
     }
 }

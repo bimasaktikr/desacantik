@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources;
 
+use App\Filament\Infolists\BusinessActivityLogInfolist;
 use App\Filament\Resources\BusinessResource\Pages;
 use App\Filament\Resources\BusinessResource\RelationManagers;
 use App\Filament\Resources\CertificationRelationManagerResource\RelationManagers\CertificationRelationManager;
@@ -67,13 +68,11 @@ class BusinessResource extends Resource
                                 ->schema([
                                     TextInput::make('phone')
                                         ->label('No. Telepon Usaha')
-                                        ->required()
                                         ->maxLength(255)
                                         ->placeholder('Masukkan No. Telepon Usaha'),
                                     TextInput::make('email')
                                         ->label('Email Usaha')
                                         ->email()
-                                        ->required()
                                         ->maxLength(255)
                                         ->placeholder('Masukkan Email Usaha'),
                                 ]),
@@ -183,6 +182,13 @@ class BusinessResource extends Resource
                                 ])
                                 ->required()
                                 ->placeholder('Pilih Pembinaan'),
+                            Select::make('certifications')
+                                ->label('Sertifikasi')
+                                ->relationship('certifications', 'name')
+                                ->multiple()
+                                ->preload()
+                                ->searchable()
+                                ->helperText('Pilih satu atau lebih sertifikasi yang dimiliki oleh usaha ini'),
                         ])
                 ])
                 ->columnSpanFull(),

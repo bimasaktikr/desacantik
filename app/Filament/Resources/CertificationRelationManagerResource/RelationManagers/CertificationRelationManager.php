@@ -12,7 +12,7 @@ use Illuminate\Database\Eloquent\SoftDeletingScope;
 
 class CertificationRelationManager extends RelationManager
 {
-    protected static string $relationship = 'certification';
+    protected static string $relationship = 'certifications';
 
     protected static ?string $recordTitleAttribute = 'name'; // asumsikan certificate ada kolom name
 

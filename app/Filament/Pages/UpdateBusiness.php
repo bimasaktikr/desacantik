@@ -27,6 +27,7 @@ use App\Models\BusinessCategory;
 use Illuminate\Support\Facades\Log;
 use App\Models\District;
 use Filament\Tables\Actions\DeleteAction;
+use Illuminate\Support\Facades\Activity;
 
 class UpdateBusiness extends Page implements HasTable
 {
@@ -493,6 +494,11 @@ class UpdateBusiness extends Page implements HasTable
                             }
                         }
                         $record->update($data);
+                        activity()
+                            ->performedOn($record)
+                            ->causedBy(\Illuminate\Support\Facades\Auth::user())
+                            ->withProperties(['attributes' => $data])
+                            ->log('Flag fields updated');
                     }),
             ])
             ->striped()
