@@ -192,19 +192,15 @@ class BusinessesImport implements ToCollection, WithHeadingRow, WithStartRow, Wi
                 $data['business_category_id'] = $category ? $category->id : null;
 
 
-                $business = null;
-                // Update or Create Logic
-                if (!$business) {
-                    $business = Business::where('user_id', $this->upload?->user_id)
-                                     ->where('village_id', $this->village_id)
-                                     ->where(function($query) use ($row) {
-                                         $query->where('name', 'like', '%' . $row['nama_usaha'] . '%')
-                                               ->where('address', 'like', '%' . $row['alamat'] . '%');
-                                     })->first();
-                }
+                $business = Business::where('user_id', $this->upload?->user_id)
+                    ->where('village_id', $this->village_id)
+                    ->where('point_id', $row['id'] ?? null)
+                    ->first();
 
                 if ($business) {
-                    $business->update($data);
+                    // Skip this row if business already exists
+                    $this->processedRows++;
+                    continue;
                 } else {
                     $business = Business::create($data);
                 }

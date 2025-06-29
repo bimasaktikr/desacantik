@@ -25,6 +25,7 @@ use App\Models\Village;
 use App\Models\Sls;
 use App\Models\BusinessCategory;
 use Illuminate\Support\Facades\Log;
+use App\Models\District;
 
 class UpdateBusiness extends Page implements HasTable
 {
@@ -134,6 +135,12 @@ class UpdateBusiness extends Page implements HasTable
                             ->color('warning')
                             ->formatStateUsing(fn ($state) => $state === 'Tetap' ? 'Tetap (Permanent)' : 'Tidak Tetap (Temporary)')
                             ->sortable(),
+                        TextColumn::make('catatan')
+                            ->label('Catatan')
+                            ->color('gray')
+                            ->badge()
+                            ->size('sm')
+                            ->limit(30),
                         TextColumn::make('pertokoan')
                             ->label('Pertokoan')
                             ->badge()
@@ -160,23 +167,16 @@ class UpdateBusiness extends Page implements HasTable
                             ->color('primary')
                             ->sortable()
                             ->searchable()
-                            ->formatStateUsing(fn ($state) => $state ?: '<span style="color: #888;">—</span>')
-                            ->html(),
+                            ->formatStateUsing(fn ($state) => 'Nama Pemilik: ' . ((!$state || $state === '-') ? '-' : $state)),
                         TextColumn::make('owner_gender')
                             ->label('Jenis Kelamin')
-                            ->badge()
                             ->color('gray')
                             ->sortable()
-                            ->formatStateUsing(fn ($state) => $state ?: '<span style="color: #888;">—</span>')
-                            ->html(),
+                            ->formatStateUsing(fn ($state) => 'Jenis Kelamin: ' . ((!$state || $state === '-') ? '-' : $state)),
                         TextColumn::make('owner_age')
                             ->label('Usia')
                             ->sortable()
-                            ->formatStateUsing(fn ($state) => $state ?: '<span style="color: #888;">—</span>')
-                            ->html(),
-                    ]),
-
-                    Stack::make([
+                            ->formatStateUsing(fn ($state) => 'Usia: ' . ((!$state || $state === '-') ? '-' : $state)),
                         TextColumn::make('phone')
                             ->label('Nomor Handphone')
                             ->icon('heroicon-m-phone')
@@ -185,11 +185,6 @@ class UpdateBusiness extends Page implements HasTable
                             ->label('Email')
                             ->icon('heroicon-m-envelope')
                             ->sortable(),
-                        TextColumn::make('catatan')
-                            ->label('Catatan')
-                            ->color('gray')
-                            ->size('sm')
-                            ->limit(30),
                     ]),
                 ])->from('md'),
 
@@ -333,7 +328,13 @@ class UpdateBusiness extends Page implements HasTable
                                             ->nullable(),
                                     ]),
                             ]),
-                    ]),
+                    ])
+                    ->action(function (array $data, $record) {
+                        $certifications = $data['certifications'] ?? [];
+                        unset($data['certifications']);
+                        $record->update($data);
+                        $record->certifications()->sync($certifications);
+                    }),
                 Action::make('flag')
                     ->label('Flag Fields')
                     ->icon('heroicon-o-flag')
@@ -367,6 +368,55 @@ class UpdateBusiness extends Page implements HasTable
                     ->modalWidth('2xl')
                     ->visible(fn () => \Illuminate\Support\Facades\Auth::user()->roles->contains('name', 'Employee')),
             ])
-            ->striped();
+            ->striped()
+            ->filters([
+                \Filament\Tables\Filters\SelectFilter::make('district_id')
+                    ->label('Kecamatan')
+                    ->options(function () {
+                        $user = \Illuminate\Support\Facades\Auth::user();
+                        if ($user->roles->contains('name', 'super_admin')) {
+                            // Superadmin: all districts
+                            return \App\Models\District::pluck('name', 'id')->toArray();
+                        } else {
+                            // Others: assigned villages only, districts derived from those villages
+                            $assignedVillageIds = \App\Models\Assignment::where('user_id', $user->id)
+                                ->where('area_type', 'App\\Models\\Village')
+                                ->pluck('area_id')
+                                ->toArray();
+                            $districtIds = \App\Models\Village::whereIn('id', $assignedVillageIds)
+                                ->pluck('district_id')
+                                ->unique()
+                                ->toArray();
+                            return \App\Models\District::whereIn('id', $districtIds)->pluck('name', 'id')->toArray();
+                        }
+                    })
+                    ->searchable()
+                    ->placeholder('Semua Kecamatan')
+                    ->query(function ($query, $data) {
+                        if (!empty($data['value'])) {
+                            $query->whereHas('village.district', function ($q) use ($data) {
+                                $q->where('id', $data['value']);
+                            });
+                        }
+                    }),
+                \Filament\Tables\Filters\SelectFilter::make('village_id')
+                    ->label('Desa')
+                    ->options(function () {
+                        $user = \Illuminate\Support\Facades\Auth::user();
+                        if ($user->roles->contains('name', 'super_admin')) {
+                            // Superadmin: all villages
+                            return \App\Models\Village::pluck('name', 'id')->toArray();
+                        } else {
+                            // Others: only assigned villages
+                            $assignedVillageIds = \App\Models\Assignment::where('user_id', $user->id)
+                                ->where('area_type', 'App\\Models\\Village')
+                                ->pluck('area_id')
+                                ->toArray();
+                            return \App\Models\Village::whereIn('id', $assignedVillageIds)->pluck('name', 'id')->toArray();
+                        }
+                    })
+                    ->searchable()
+                    ->placeholder('Semua Desa'),
+            ]);
     }
 }

@@ -29,6 +29,7 @@ class Business extends Model
         'pembinaan',
         'pertokoan',
         'catatan_lantaibloksektor',
+        'catatan',
         'user_id',
         'remarks',
         'time',
