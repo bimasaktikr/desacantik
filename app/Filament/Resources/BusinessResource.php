@@ -29,6 +29,7 @@ use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Auth;
 
 class BusinessResource extends Resource
 {
@@ -350,7 +351,8 @@ class BusinessResource extends Resource
                     }),
             ], layout: FiltersLayout::AboveContentCollapsible)
             ->actions([
-                Tables\Actions\EditAction::make(),
+                Tables\Actions\EditAction::make()
+                    ->visible(fn () => Auth::user()?->roles?->contains('name', 'super_admin')),
                 Tables\Actions\DeleteAction::make(),
             ])
             ->bulkActions([
