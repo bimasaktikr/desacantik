@@ -9,6 +9,8 @@ use Filament\Tables\Columns\TextColumn;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Assignment;
+use Filament\Tables\Filters\SelectFilter;
+use App\Models\District;
 
 class VillageBusinessSummary extends BaseWidget
 {
@@ -49,6 +51,18 @@ class VillageBusinessSummary extends BaseWidget
                     ->label('Total Businesses')
                     ->getStateUsing(function ($record) {
                         return $record->sls->flatMap->businesses->unique('id')->count();
+                    }),
+            ])
+            ->filters([
+                SelectFilter::make('district_id')
+                    ->label('District')
+                    ->options(fn () => District::pluck('name', 'id')->toArray())
+                    ->searchable()
+                    ->placeholder('All Districts')
+                    ->query(function ($query, $data) {
+                        if (!empty($data['value'])) {
+                            $query->where('district_id', $data['value']);
+                        }
                     }),
             ])
             ->defaultSort('name');
