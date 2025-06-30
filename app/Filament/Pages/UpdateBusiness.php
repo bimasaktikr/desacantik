@@ -28,6 +28,8 @@ use Illuminate\Support\Facades\Log;
 use App\Models\District;
 use Filament\Tables\Actions\DeleteAction;
 use Illuminate\Support\Facades\Activity;
+use Filament\Tables\Actions\BulkAction;
+use Filament\Notifications\Notification;
 
 class UpdateBusiness extends Page implements HasTable
 {
@@ -106,8 +108,13 @@ class UpdateBusiness extends Page implements HasTable
                             })
                             ->html(),
                         TextColumn::make('user.name')
-
-
+                            ->label('Petugas')
+                            ->icon('heroicon-o-user')
+                            ->color('primary')
+                            ->weight(\Filament\Support\Enums\FontWeight::Bold)
+                            ->size('sm')
+                            // ->tooltip(fn($record) => $record->user?->email ? 'Email: ' . $record->user->email : null)
+                            ->formatStateUsing(fn($state) => $state ? $state : '-')
                     ]),
 
                     Stack::make([
@@ -189,8 +196,10 @@ class UpdateBusiness extends Page implements HasTable
                             ->sortable(),
                     ]),
                 ])->from('md'),
-
-
+                TextColumn::make('final_flag')
+                    ->label('Status Finalisasi')
+                    ->badge()
+                    ->formatStateUsing(fn($state) => $state ? 'Sudah Final' : 'Belum Final'),
             ])
             ->actions([
                 EditAction::make()
@@ -326,6 +335,9 @@ class UpdateBusiness extends Page implements HasTable
                         $record->certifications()->sync($certifications);
                     })
                     ->visible(function ($record) {
+                        if ($record->final_flag) {
+                            return false;
+                        }
                         $user = \Illuminate\Support\Facades\Auth::user();
                         if ($record->user_id == $user->id) {
                             return true;
@@ -344,6 +356,9 @@ class UpdateBusiness extends Page implements HasTable
                     ->modalHeading('Are you sure you want to delete this business?')
                     ->modalDescription('This action cannot be undone.')
                     ->visible(function ($record) {
+                        if ($record->final_flag) {
+                            return false;
+                        }
                         $user = \Illuminate\Support\Facades\Auth::user();
                         if ($record->user_id == $user->id) {
                             return true;
@@ -475,7 +490,12 @@ class UpdateBusiness extends Page implements HasTable
                             ]),
                     ])
                     ->modalWidth('2xl')
-                    ->visible(fn () => \Illuminate\Support\Facades\Auth::user()->roles->contains('name', 'Employee'))
+                    ->visible(function ($record) {
+                        if ($record->final_flag) {
+                            return false;
+                        }
+                        return \Illuminate\Support\Facades\Auth::user()->roles->contains('name', 'Employee');
+                    })
                     ->action(function (array $data, $record) {
                         $fields = [
                             'name_error',
@@ -507,6 +527,23 @@ class UpdateBusiness extends Page implements HasTable
                             ->causedBy(\Illuminate\Support\Facades\Auth::user())
                             ->withProperties(['attributes' => $data])
                             ->log('Flag fields updated');
+                    }),
+            ])
+            ->bulkActions([
+                BulkAction::make('finalisasi')
+                    ->label('Finalisasi Data')
+                    ->requiresConfirmation()
+                    ->visible(fn () => \Illuminate\Support\Facades\Auth::user()->roles->contains('name', 'Employee'))
+                    ->action(function (\Illuminate\Support\Collection $records) {
+                        foreach ($records as $record) {
+                            $record->final_flag = true;
+                            $record->save();
+                        }
+                        Notification::make()
+                            ->title('Finalisasi berhasil')
+                            ->success()
+                            ->body('Data bisnis yang dipilih telah difinalisasi.')
+                            ->send();
                     }),
             ])
             ->striped()

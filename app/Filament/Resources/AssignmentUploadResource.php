@@ -14,6 +14,8 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use App\Models\User;
 use Filament\Tables\Tab;
+use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Storage;
 
 class AssignmentUploadResource extends Resource
 {
@@ -92,7 +94,7 @@ class AssignmentUploadResource extends Resource
                 Tables\Actions\Action::make('download')
                     ->label('Download')
                     ->icon('heroicon-o-arrow-down-tray')
-                    ->url(fn ($record) => $record->file_path ? (\Illuminate\Support\Str::startsWith($record->file_path, ['http://', 'https://']) ? $record->file_path : \Illuminate\Support\Facades\Storage::url($record->file_path)) : '#')
+                    ->url(fn ($record) => $record->file_path ? (Str::startsWith($record->file_path, ['http://', 'https://']) ? $record->file_path : Storage::disk('public')->url($record->file_path)) : '#')
                     ->openUrlInNewTab()
                     ->visible(fn ($record) => !empty($record->file_path)),
                 // Tables\Actions\EditAction::make(), // Disabled edit action
