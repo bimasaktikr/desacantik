@@ -105,6 +105,9 @@ class UpdateBusiness extends Page implements HasTable
                                 return ($record->address_error ? '🚩 ' : '') . e($state);
                             })
                             ->html(),
+                        TextColumn::make('user.name')
+
+
                     ]),
 
                     Stack::make([
