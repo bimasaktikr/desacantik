@@ -30,6 +30,8 @@ use Filament\Tables\Actions\DeleteAction;
 use Illuminate\Support\Facades\Activity;
 use Filament\Tables\Actions\BulkAction;
 use Filament\Notifications\Notification;
+use Maatwebsite\Excel\Facades\Excel;
+use App\Exports\BusinessExport;
 
 class UpdateBusiness extends Page implements HasTable
 {
@@ -527,6 +529,15 @@ class UpdateBusiness extends Page implements HasTable
                             ->causedBy(\Illuminate\Support\Facades\Auth::user())
                             ->withProperties(['attributes' => $data])
                             ->log('Flag fields updated');
+                    }),
+            ])
+            ->headerActions([
+                Action::make('export')
+                    ->label('Export to Excel')
+                    ->icon('heroicon-o-arrow-down-tray')
+                    ->visible(fn () => \Illuminate\Support\Facades\Auth::user()->roles->contains('name', 'super_admin') || \Illuminate\Support\Facades\Auth::user()->roles->contains('name', 'Employee'))
+                    ->action(function () {
+                        return Excel::download(new BusinessExport(auth()->user()), 'businesses.xlsx');
                     }),
             ])
             ->bulkActions([
