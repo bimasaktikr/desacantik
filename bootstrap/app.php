@@ -26,7 +26,7 @@ return Application::configure(basePath: dirname(__DIR__))
     })
     ->withSchedule(function (Schedule $schedule) {
         // ✅ Tambahkan perintah queue:work
-        $schedule->command('queue:work --once')->everyMinute();
+        $schedule->command('queue:work --stop-when-empty')->everyMinute();
 
         // Tambahkan task lain jika perlu
         // $schedule->command('your:other-command')->daily();
