@@ -537,7 +537,11 @@ class UpdateBusiness extends Page implements HasTable
                     ->icon('heroicon-o-arrow-down-tray')
                     ->visible(fn () => \Illuminate\Support\Facades\Auth::user()->roles->contains('name', 'super_admin') || \Illuminate\Support\Facades\Auth::user()->roles->contains('name', 'Employee'))
                     ->action(function () {
-                        return Excel::download(new BusinessExport(auth()->user()), 'businesses.xlsx');
+                        $user = \Illuminate\Support\Facades\Auth::user();
+                        $timestamp = now()->format('Y-m-d_H-i-s');
+                        $username = $user ? preg_replace('/[^A-Za-z0-9_\-]/', '_', $user->name) : 'UnknownUser';
+                        $fileName = "BusinessExport_{$username}_{$timestamp}.xlsx";
+                        return \Maatwebsite\Excel\Facades\Excel::download(new \App\Exports\BusinessExport($user), $fileName);
                     }),
             ])
             ->bulkActions([
