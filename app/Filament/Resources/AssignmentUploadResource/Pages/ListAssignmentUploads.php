@@ -28,6 +28,8 @@ class ListAssignmentUploads extends ListRecords
                 ->modifyQueryUsing(fn ($query) => $query->where('import_status', 'gagal')),
             'pending' => Tab::make('Pending')
                 ->modifyQueryUsing(fn ($query) => $query->where('import_status', 'pending')),
+            'processing' => Tab::make('Processing')
+                ->modifyQueryUsing(fn ($query) => $query->where('import_status', 'processing')),
         ];
     }
 }
