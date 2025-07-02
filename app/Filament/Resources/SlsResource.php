@@ -21,6 +21,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Illuminate\Support\Facades\Storage;
 use Livewire\Livewire;
+use Illuminate\Support\Str;
 
 class SlsResource extends Resource
 {
@@ -44,7 +45,53 @@ class SlsResource extends Resource
     {
         return $form
             ->schema([
-                //
+                Forms\Components\Select::make('district_id')
+                    ->label('Kecamatan')
+                    ->options(fn() => \App\Models\District::pluck('name', 'id'))
+                    ->reactive()
+                    ->afterStateUpdated(fn(callable $set) => $set('village_id', null)),
+                Forms\Components\Select::make('village_id')
+                    ->label('Desa')
+                    ->options(function (callable $get) {
+                        $districtId = $get('district_id');
+                        return $districtId
+                            ? \App\Models\Village::where('district_id', $districtId)->pluck('name', 'id')
+                            : [];
+                    })
+                    ->required()
+                    ->searchable()
+                    ->reactive(),
+                Forms\Components\TextInput::make('name')
+                    ->label('Nama SLS')
+                    ->required()
+                    ->maxLength(255)
+                    ->reactive()
+                    ->afterStateUpdated(fn($state, callable $set) => $set('slug', Str::slug($state))),
+                Forms\Components\TextInput::make('slug')
+                    ->label('Slug')
+                    ->required()
+                    ->unique(ignoreRecord: true)
+                    ->maxLength(255)
+                    ->hidden(),
+                Forms\Components\TextInput::make('code')
+                    ->label('Kode')
+                    ->required()
+                    ->unique(ignoreRecord: true)
+                    ->maxLength(255),
+                Forms\Components\TextInput::make('sls_code')
+                    ->label('Kode SLS')
+                    ->required()
+                    ->maxLength(255),
+                Forms\Components\TextInput::make('geojson_path')
+                    ->label('GeoJSON Path')
+                    ->required()
+                    ->unique(ignoreRecord: true)
+                    ->maxLength(255),
+                Forms\Components\Select::make('base_map_id')
+                    ->label('Base Map')
+                    ->relationship('baseMap', 'period')
+                    ->searchable()
+                    ->nullable(),
             ]);
     }
 

@@ -5,6 +5,7 @@ namespace App\Filament\Resources\SlsResource\Pages;
 use App\Filament\Resources\SlsResource;
 use Filament\Actions;
 use Filament\Actions\Action;
+use Filament\Actions\CreateAction;
 use Filament\Resources\Pages\ListRecords;
 
 class ListSls extends ListRecords
@@ -14,7 +15,7 @@ class ListSls extends ListRecords
     protected function getHeaderActions(): array
     {
         return [
-            // Actions\CreateAction::make(),
+            CreateAction::make(),
             // Action::make('Unggah')
         ];
     }
