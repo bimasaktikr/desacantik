@@ -30,7 +30,7 @@ class Sls extends Model
 
     public function baseMap()
     {
-        return $this->belongsTo(BaseMap::class);
+        return $this->belongsTo(Basemap::class);
     }
 
     public function assignments(): MorphMany
