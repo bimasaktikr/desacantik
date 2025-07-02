@@ -37,4 +37,9 @@ class Village extends Model
     {
         return $this->hasMany(\App\Models\Sls::class);
     }
+
+    public function businesses()
+    {
+        return $this->hasMany(\App\Models\Business::class);
+    }
 }

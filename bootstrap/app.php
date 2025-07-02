@@ -28,7 +28,9 @@ return Application::configure(basePath: dirname(__DIR__))
         // ✅ Tambahkan perintah queue:work
         $schedule->command('queue:work --stop-when-empty')->everyMinute();
 
-        // Tambahkan task lain jika perlu
-        // $schedule->command('your:other-command')->daily();
+        // Send daily report at 07:30, 16:00, and 00:00
+        $schedule->command('report:send-daily')->dailyAt('07:30');
+        $schedule->command('report:send-daily')->dailyAt('16:00');
+        $schedule->command('report:send-daily')->dailyAt('00:00');
     })
     ->create();

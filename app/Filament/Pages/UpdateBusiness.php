@@ -201,6 +201,7 @@ class UpdateBusiness extends Page implements HasTable
                 TextColumn::make('final_flag')
                     ->label('Status Finalisasi')
                     ->badge()
+                    ->color(fn($state) => $state ? 'success' : null)
                     ->formatStateUsing(fn($state) => $state ? 'Sudah Final' : 'Belum Final'),
             ])
             ->actions([
@@ -530,6 +531,34 @@ class UpdateBusiness extends Page implements HasTable
                             ->withProperties(['attributes' => $data])
                             ->log('Flag fields updated');
                     }),
+                Action::make('unfinal')
+                    ->label('Unfinalize')
+                    ->icon('heroicon-o-arrow-uturn-left')
+                    ->color('warning')
+                    ->requiresConfirmation()
+                    ->modalHeading('Unfinalize Business')
+                    ->modalDescription('Are you sure you want to unfinalize this business? This will allow it to be edited again.')
+                    ->visible(function ($record) {
+                        if (!$record->final_flag) {
+                            return false;
+                        }
+                        return \Illuminate\Support\Facades\Auth::user()->roles->contains('name', 'Employee');
+                    })
+                    ->action(function ($record) {
+                        $record->update(['final_flag' => false]);
+
+                        activity()
+                            ->performedOn($record)
+                            ->causedBy(\Illuminate\Support\Facades\Auth::user())
+                            ->withProperties(['final_flag' => false])
+                            ->log('Business unfinalized');
+
+                        Notification::make()
+                            ->title('Business unfinalized')
+                            ->success()
+                            ->body('The business has been unfinalized and can now be edited.')
+                            ->send();
+                    }),
             ])
             ->headerActions([
                 Action::make('export')
@@ -550,14 +579,65 @@ class UpdateBusiness extends Page implements HasTable
                     ->requiresConfirmation()
                     ->visible(fn () => \Illuminate\Support\Facades\Auth::user()->roles->contains('name', 'Employee'))
                     ->action(function (\Illuminate\Support\Collection $records) {
+                        $flagFields = [
+                            'name_error',
+                            'description_error',
+                            'address_error',
+                            'village_id_error',
+                            'sls_id_error',
+                            'status_bangunan_error',
+                            'business_category_id_error',
+                            'phone_error',
+                            'email_error',
+                            'owner_name_error',
+                            'owner_gender_error',
+                            'owner_age_error',
+                            'online_status_error',
+                            'pembinaan_error',
+                            'catatan_error',
+                            'user_id_error',
+                        ];
                         foreach ($records as $record) {
                             $record->final_flag = true;
+                            foreach ($flagFields as $field) {
+                                $record->$field = false;
+                            }
                             $record->save();
                         }
                         Notification::make()
                             ->title('Finalisasi berhasil')
                             ->success()
                             ->body('Data bisnis yang dipilih telah difinalisasi.')
+                            ->send();
+
+                    }),
+                BulkAction::make('unfinalisasi')
+                    ->label('Unfinalisasi Data')
+                    ->icon('heroicon-o-arrow-uturn-left')
+                    ->color('warning')
+                    ->requiresConfirmation()
+                    ->modalHeading('Unfinalize Selected Businesses')
+                    ->modalDescription('Are you sure you want to unfinalize the selected businesses? This will allow them to be edited again.')
+                    ->visible(fn () => \Illuminate\Support\Facades\Auth::user()->roles->contains('name', 'Employee'))
+                    ->action(function (\Illuminate\Support\Collection $records) {
+                        $unfinalizedCount = 0;
+                        foreach ($records as $record) {
+                            if ($record->final_flag) {
+                                $record->update(['final_flag' => false]);
+                                $unfinalizedCount++;
+
+                                activity()
+                                    ->performedOn($record)
+                                    ->causedBy(\Illuminate\Support\Facades\Auth::user())
+                                    ->withProperties(['final_flag' => false])
+                                    ->log('Business unfinalized via bulk action');
+                            }
+                        }
+
+                        Notification::make()
+                            ->title('Unfinalisasi berhasil')
+                            ->success()
+                            ->body("{$unfinalizedCount} data bisnis telah diunfinalisasi dan dapat diedit kembali.")
                             ->send();
                     }),
             ])

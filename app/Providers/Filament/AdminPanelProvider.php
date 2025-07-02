@@ -102,6 +102,10 @@ class AdminPanelProvider extends PanelProvider
                     ->label('Pendataan')
                     ->icon('heroicon-o-pencil-square')
                     ->collapsed(),
+                NavigationGroup::make('Laporan')
+                    ->label('Laporan')
+                    ->icon('heroicon-o-document-text')
+                    ->collapsed(),
                 NavigationGroup::make('Monitoring')
                     ->label('Monitoring')
                     ->icon('heroicon-o-presentation-chart-line')

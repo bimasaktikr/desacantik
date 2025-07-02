@@ -119,21 +119,29 @@ class BusinessResource extends Resource
                                         ->schema([
                                             Select::make('district_id')
                                                 ->label('Kecamatan')
-                                                ->options(fn (callable $get) =>
-                                                    District::pluck('name', 'id')
+                                                ->options(fn () =>
+                                                    \App\Models\District::whereIn(
+                                                        'id',
+                                                        \App\Models\Village::whereIn('id', \App\Models\Business::distinct()->pluck('village_id'))
+                                                            ->pluck('district_id')
+                                                            ->unique()
+                                                    )->pluck('name', 'id')
                                                 )
+                                                ->preload()
                                                 ->reactive()
                                                 ->afterStateUpdated(fn ($state, callable $set) => $set('village_id', null))
-                                                ->required(),
+                                                ->columnSpan(1),
 
                                             Select::make('village_id')
                                                 ->label('Desa/Kelurahan')
                                                 ->options(fn (callable $get) =>
-                                                    Village::where('district_id', $get('district_id'))
-                                                        ->pluck('name', 'id')
+                                                    $get('district_id')
+                                                        ? \App\Models\Village::where('district_id', $get('district_id'))
+                                                            ->whereIn('id', \App\Models\Business::distinct()->pluck('village_id'))
+                                                            ->pluck('name', 'id')
+                                                        : []
                                                 )
-                                                ->reactive()
-                                                ->afterStateUpdated(fn ($state, callable $set) => $set('sls_id', null))
+                                                ->preload()
                                                 ->required(),
 
                                             Select::make('sls_id')
@@ -262,27 +270,38 @@ class BusinessResource extends Resource
                     ->form([
                         Select::make('district_id')
                             ->label('Kecamatan')
-                            ->options(\App\Models\District::pluck('name', 'id'))
+                            ->options(fn () =>
+                                \App\Models\District::whereIn(
+                                    'id',
+                                    \App\Models\Village::whereIn('id', \App\Models\Business::distinct()->pluck('village_id'))
+                                        ->pluck('district_id')
+                                        ->unique()
+                                )->pluck('name', 'id')
+                            )
+                            ->preload()
                             ->reactive()
-                            ->afterStateUpdated(fn (callable $set) => $set('village_id', null)),
+                            ->afterStateUpdated(fn ($state, callable $set) => $set('village_id', null))
+                            ->required(),
                         Select::make('village_id')
                             ->label('Desa/Kelurahan')
-                            ->options(function (callable $get) {
-                                $districtId = $get('district_id');
-                                return $districtId
-                                    ? \App\Models\Village::where('district_id', $districtId)->pluck('name', 'id')
-                                    : [];
-                            })
+                            ->options(fn (callable $get) =>
+                                $get('district_id')
+                                    ? \App\Models\Village::where('district_id', $get('district_id'))
+                                        ->whereIn('id', \App\Models\Business::distinct()->pluck('village_id'))
+                                        ->pluck('name', 'id')
+                                    : []
+                            )
+                            ->preload()
                             ->reactive()
-                            ->afterStateUpdated(fn (callable $set) => $set('sls_id', null)),
+                            ->afterStateUpdated(fn ($state, callable $set) => $set('sls_id', null))
+                            ->required(),
                         Select::make('sls_id')
                             ->label('SLS')
-                            ->options(function (callable $get) {
-                                $villageId = $get('village_id');
-                                return $villageId
-                                    ? \App\Models\Sls::where('village_id', $villageId)->pluck('name', 'id')
-                                    : [];
-                            }),
+                            ->options(fn (callable $get) =>
+                                SLS::where('village_id', $get('village_id'))
+                                    ->pluck('name', 'id')
+                            )
+                            ->required(),
                     ])
                     ->query(function (Builder $query, array $data) {
                         if (!empty($data['district_id'])) {
