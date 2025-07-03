@@ -580,8 +580,8 @@ class UpdateBusiness extends Page implements HasTable
                         $user = \Illuminate\Support\Facades\Auth::user();
                         $timestamp = now()->format('Y-m-d_H-i-s');
                         $username = $user ? preg_replace('/[^A-Za-z0-9_\-]/', '_', $user->name) : 'UnknownUser';
-                        $fileName = "BusinessExport_{$username}_{$timestamp}.xlsx";
-                        return \Maatwebsite\Excel\Facades\Excel::download(new \App\Exports\BusinessExport($user), $fileName);
+                        $fileName = "BusinessDataExport_{$username}_{$timestamp}.xlsx";
+                        return \Maatwebsite\Excel\Facades\Excel::download(new \App\Exports\BusinessDataExport($user), $fileName);
                     }),
             ])
             ->bulkActions([
