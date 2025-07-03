@@ -9,7 +9,7 @@ use Maatwebsite\Excel\Concerns\FromQuery;
 use Maatwebsite\Excel\Concerns\WithMapping;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 
-class BusinessExport implements FromQuery, WithHeadings, WithMapping
+class BusinessDataExport implements FromQuery, WithHeadings, WithMapping
 {
     protected User $user;
 
@@ -98,7 +98,7 @@ class BusinessExport implements FromQuery, WithHeadings, WithMapping
             $business->name,
             $business->description,
             $business->status_bangunan,
-            $business->businessCategory ? $business->businessCategory->code . '.' . $business->businessCategory->description : null,
+            $business->businessCategory ? $business->businessCategory->code . '. ' . $business->businessCategory->description : null,
             $business->catatan,
         ];
     }
