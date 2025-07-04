@@ -26,6 +26,11 @@ class DailyReport extends Page
     public $todayByDistrict = [];
     public $todayByVillage = [];
 
+    public static function shouldRegisterNavigation(): bool
+    {
+        return auth()->user()->hasRole('super_admin');
+    }
+
     public function mount()
     {
         // Cumulative by district
@@ -48,6 +53,7 @@ class DailyReport extends Page
             $query->whereDate('created_at', today());
         }])->get();
     }
+
 
     public function getHeaderActions(): array
     {

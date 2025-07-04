@@ -654,6 +654,12 @@ class UpdateBusiness extends Page implements HasTable
             ])
             ->striped()
             ->filters([
+                \Filament\Tables\Filters\SelectFilter::make('final_flag')
+                    ->label('Status Finalisasi')
+                    ->options([
+                        '1' => 'Sudah Final',
+                        '0' => 'Belum Final',
+                    ]),
                 \Filament\Tables\Filters\SelectFilter::make('district_id')
                     ->label('Kecamatan')
                     ->options(function () {

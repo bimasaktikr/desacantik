@@ -138,6 +138,10 @@ class AdminPanelProvider extends PanelProvider
                     ->label('User')
                     ->icon('heroicon-o-user-group')
                     ->collapsed(),
+                NavigationGroup::make('settings')
+                    ->label('Settings')
+                    ->icon('heroicon-o-adjustments-horizontal')
+                    ->collapsed(),
                 NavigationGroup::make('Filament Shield')
                     ->label('Filament Shield')
                     ->icon('heroicon-o-shield-check')
