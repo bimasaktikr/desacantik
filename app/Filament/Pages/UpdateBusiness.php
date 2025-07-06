@@ -561,7 +561,7 @@ class UpdateBusiness extends Page implements HasTable
                     }),
             ])
             ->headerActions([
-                Action::make('export')
+                Action::make('export_kendedes')
                     ->label('Export to Kendedes')
                     ->icon('heroicon-o-arrow-down-tray')
                     ->visible(fn () => \Illuminate\Support\Facades\Auth::user()->roles->contains('name', 'super_admin') || \Illuminate\Support\Facades\Auth::user()->roles->contains('name', 'Employee'))
@@ -572,7 +572,7 @@ class UpdateBusiness extends Page implements HasTable
                         $fileName = "BusinessExport_{$username}_{$timestamp}.xlsx";
                         return \Maatwebsite\Excel\Facades\Excel::download(new \App\Exports\BusinessExport($user), $fileName);
                     }),
-                Action::make('export')
+                Action::make('export_excel')
                     ->label('Export to Excel')
                     ->icon('heroicon-o-arrow-down-tray')
                     ->visible()
