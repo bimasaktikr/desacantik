@@ -44,13 +44,13 @@ class UpdateBusiness extends Page implements HasTable
     protected static ?string $navigationLabel = 'Update Data Usaha';
     protected static ?string $navigationGroup = 'Pendataan';
 
-    public static function shouldRegisterNavigation(): bool
-    {
-        $user = Auth::user();
-        // Debug: dump the user's roles
-        // dd($user ? $user->roles->pluck('name') : null);
-        return $user && ($user->roles->contains('name', 'Employee') || $user->roles->contains('name', 'Mahasiswa'));
-    }
+    // public static function shouldRegisterNavigation(): bool
+    // {
+    //     $user = Auth::user();
+    //     // Debug: dump the user's roles
+    //     // dd($user ? $user->roles->pluck('name') : null);
+    //     return $user && ($user->roles->contains('name', 'Employee') || $user->roles->contains('name', 'Mahasiswa') || $user->roles->contains('name', 'Kepala BPS') );
+    // }
 
     public function table(Tables\Table $table): Tables\Table
     {
